@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "format": "generic-long",
+  "data_file": "scans.csv",
+  "experiment": {
+    "experiment_id": "synthetic-conflict-001",
+    "experiment_type": "sedimentation_velocity"
+  },
+  "defaults": {
+    "cell": "1",
+    "signal_unit": "absorbance_unit"
+  },
+  "notes": "Manifest default cell '1' conflicts with the table's cell column '2'."
+}

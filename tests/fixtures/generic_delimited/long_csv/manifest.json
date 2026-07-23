@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "format": "generic-long",
+  "data_file": "scans.csv",
+  "experiment": {
+    "experiment_id": "synthetic-long-001",
+    "name": "Synthetic long CSV",
+    "experiment_type": "sedimentation_velocity"
+  },
+  "defaults": {
+    "optical_system": "absorbance",
+    "signal_unit": "absorbance_unit",
+    "cell": "1",
+    "channel": "A"
+  },
+  "notes": "Synthetic fixture; safe to redistribute."
+}

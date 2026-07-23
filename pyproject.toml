@@ -79,6 +79,14 @@ strict = true
 warn_unused_configs = true
 files = ["src", "tests"]
 
+# numpy >= 2.1 ships type stubs that use PEP 695 `type` statements, which mypy
+# only parses under a 3.12+ target. Skip following into numpy's stubs so the
+# 3.11 target is preserved for our own code; numpy symbols become Any.
+[[tool.mypy.overrides]]
+module = ["numpy.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]

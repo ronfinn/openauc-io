@@ -1,9 +1,10 @@
 # ADR-0004 — Parser plugin registry
 
-- **Status:** Proposed
-- **Date:** 2026-07-23
+- **Status:** Accepted (Phase 3 — implemented; see the Phase 3 amendment below)
+- **Date:** 2026-07-23 (proposed); amended 2026-07-23 (Phase 3)
 - **Deciders:** Ron Finn
-- **Related:** ADR-0001, ADR-0002, ADR-0003; development-log/0001
+- **Related:** ADR-0001, ADR-0002, ADR-0003; development-log/0001;
+  development-log/0003
 
 ## Context
 
@@ -97,3 +98,40 @@ Introduce an internal **parser plugin registry** (`src/openauc/registry.py`):
 - Python Packaging User Guide — plugin discovery via entry points
   (`importlib.metadata`).
 - `importlib.metadata` standard-library documentation.
+
+---
+
+## Amendment — Phase 3 implementation (2026-07-23)
+
+The registry is now implemented in `src/openauc/formats/` and the interface
+signatures are settled.
+
+**Decorator registration.** First-party parsers register with the
+`@register_parser` class decorator (`openauc.formats.registry`). Each parser is an
+ABC subclass exposing `format_id`, `name`, `suffixes`, `layouts`, `limitations`,
+`doc_reference`, plus `detect()` and `parse()`.
+
+**Detection contract.** `detect()` returns a `DetectionResult` with
+`parser_id`, a `confidence` in `[0.0, 1.0]`, `evidence`, and `warnings`.
+`detect_parser()` selects the highest-confidence parser subject to a minimum
+confidence (`0.5`) and a tie margin (`0.15`); failures raise
+`UnsupportedFormatError` or `AmbiguousFormatError`.
+
+**Selection precedence.** Explicit `format=` override → manifest-declared
+`format` → detection (used when the manifest omits a format). A declared or
+overridden format goes straight to `parse()`, which yields precise structural
+errors on mismatch. Delimiter ambiguity is resolved before parser selection and
+raises `AmbiguousFormatError`.
+
+**Enumerability.** `available_formats()` returns `FormatInfo` records for exactly
+the registered parsers, so support is never overclaimed.
+
+**Entry points deferred.** Third-party entry-point discovery is **not** enabled in
+this phase; only in-tree first-party parsers register. It remains available to add
+later once the first-party interface has proven stable, without changing the
+decorator contract. This is a scoped narrowing of the original decision, not a
+reversal.
+
+**Exceptions.** The ingestion exception vocabulary is `UnsupportedFormatError`,
+`AmbiguousFormatError` (both under `FormatError`), `ParseError` (under
+`FormatError`), `ManifestError` and `DataConflictError` (under `OpenAUCError`).

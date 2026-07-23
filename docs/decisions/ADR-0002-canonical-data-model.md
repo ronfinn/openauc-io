@@ -1,9 +1,10 @@
 # ADR-0002 — Canonical in-memory AUC data model
 
-- **Status:** Proposed
-- **Date:** 2026-07-23
+- **Status:** Accepted (Phase 2 — refined; see the Phase 2 amendment below)
+- **Date:** 2026-07-23 (proposed); amended 2026-07-23 (Phase 2)
 - **Deciders:** Ron Finn
-- **Related:** ADR-0001, ADR-0003, ADR-0004; development-log/0001
+- **Related:** ADR-0001, ADR-0003, ADR-0004; development-log/0001;
+  development-log/0002
 
 ## Context
 
@@ -109,3 +110,56 @@ implicit side effect of import.
   not as an implementation source).
 - xarray documentation — data model, coordinates, and alignment semantics.
 - pydantic v2 documentation — strict validation and serialisation.
+
+---
+
+## Amendment — Phase 2 implementation (2026-07-23)
+
+The following previously-open points are now **accepted** and implemented. Where
+the implementation refined the original wording, the refinement is recorded
+here.
+
+**Optical systems (resolves the "optical systems in v1" question).** The model
+represents five optical-system values: `absorbance`, `interference`,
+`fluorescence`, `intensity`, `unknown`. Representation is explicitly **not** a
+claim that import or scientific interpretation is implemented for each system.
+
+**Canonical units and unit behaviour (resolves the "canonical units"
+question).** Canonical units are fixed (radius cm; time s; speed rpm; temperature
+°C; wavelength nm; sedimentation coefficient s; diffusion coefficient cm²/s;
+absorbance AU; interference fringes; fluorescence/intensity instrument or
+calibrated units). The model **retains** declared units and never infers or
+silently converts. Unknown units are represented explicitly (`Unit.UNKNOWN`);
+open-ended units (e.g. concentration) use `Unit.OTHER` with the verbatim text in
+`Quantity.unit_label`. No unit library (Pint) is added in this phase; any future
+adoption requires a further amendment.
+
+**Missing/unknown/not-applicable.** These are modelled distinctly via
+`Quantity.status` (`PRESENT`/`MISSING`/`UNKNOWN`/`NOT_APPLICABLE`); unknown
+scientific values are never replaced by defaults. Per-value provenance is carried
+via `Quantity.provenance`.
+
+**Radius-axis representation (settles the open "scan-set container" question).**
+A single `Observations` class supports both modes with an explicit
+`RadiusAxisMode`. Per-scan axes use **padded 2-D `(scan, point)` arrays with an
+authoritative boolean validity mask**; a value is a real observation iff its mask
+entry is `True`, and padding (`NaN`) is never presented as measured data. No
+interpolation or resampling occurs. Consequence: a single `signal_unit` is
+carried per `Observations` set in this phase (heterogeneous per-scan signal units
+are a documented limitation), while each scan retains its own `optical_system`.
+
+**Container type.** `AUCExperiment` is a **frozen dataclass** composing the
+pydantic metadata models with the xarray-backed `Observations`, rather than a
+pydantic model, so the array layer is not forced through pydantic serialisation.
+It exposes `summary()`, `validate_structure()`, and `to_dict()`/`from_dict()`.
+
+**Validation placement.** Data-model (structural) validation lives in
+`openauc/models/validation.py` for this phase. The top-level `validation/`
+subpackage anticipated in ADR-0001 is reserved for later cross-cutting or
+scientific validation. Structural validation is representational only and makes
+no scientific-suitability judgement.
+
+**Provenance timing.** The in-memory provenance representation
+(`ImportProvenance`) is implemented now (usable with hand-built synthetic
+experiments); AUCX archive serialisation of provenance remains Phase 6
+(ADR-0003).

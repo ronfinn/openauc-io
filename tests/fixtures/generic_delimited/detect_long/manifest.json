@@ -1,0 +1,6 @@
+{
+  "schema_version": "1.0",
+  "data_file": "scans.csv",
+  "experiment": {"experiment_id": "synthetic-detect-001"},
+  "defaults": {"signal_unit": "absorbance_unit"}
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "format": "generic-long",
+  "data_file": "scans.csv",
+  "experiment": {
+    "experiment_id": "synthetic-perscan-001",
+    "name": "Synthetic non-uniform per-scan radius",
+    "experiment_type": "sedimentation_velocity"
+  },
+  "defaults": {
+    "optical_system": "absorbance",
+    "signal_unit": "absorbance_unit"
+  },
+  "notes": "Scans do not share a radius axis; expect per-scan Observations."
+}
