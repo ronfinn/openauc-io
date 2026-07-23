@@ -64,8 +64,6 @@ options listed on the repository owner's GitHub profile.
 
 All reports will be reviewed and investigated promptly and fairly.
 
-Do not modify any other files.
-
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
