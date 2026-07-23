@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: openauc-io
+abstract: >-
+  Open-source Python library for importing, validating, standardising,
+  visualising and archiving analytical ultracentrifugation (AUC) data.
+type: software
+authors:
+  - family-names: Finn
+    given-names: Ron
+repository-code: "https://github.com/ronfinn/openauc-io"
+url: "https://github.com/ronfinn/openauc-io"
+license: Apache-2.0
+version: 0.1.0.dev0
+keywords:
+  - analytical ultracentrifugation
+  - AUC
+  - scientific data
+  - data archiving
+  - sedimentation
