@@ -18,7 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Dependabot, and a CI workflow across Python 3.11–3.13.
 - Community-health files: `README`, `CONTRIBUTING`, `CODE_OF_CONDUCT`,
   `SECURITY`, `CITATION.cff`, `NOTICE`, and a filled Apache-2.0 `LICENSE`.
+- Phase 2 — canonical in-memory data model (`openauc.models`): pydantic v2
+  metadata (`ExperimentMetadata`, `InstrumentMetadata`, `SampleMetadata`,
+  `ScanMetadata`), the `Quantity` value type with explicit
+  present/missing/unknown/not-applicable status and per-value provenance, an
+  xarray-backed `Observations` store supporting shared and per-scan radius axes
+  (per-scan uses padded 2-D arrays with an authoritative validity mask; no
+  silent interpolation), the `AUCExperiment` container with `summary()` and
+  structural `validate_structure()`, an in-memory `ImportProvenance` record, and
+  metadata/experiment serialisation via `to_dict()`/`from_dict()`. Adds
+  `ObservationError` and `StructuralValidationError`. Concept docs under
+  `docs/concepts/` and an API reference at `docs/api.md`.
 
-_No scientific functionality is implemented yet._
+_Phase 2 provides data representation and structural validation only. There is
+no CSV/TSV parsing, AUCX archive I/O, plotting, unit conversion, or scientific
+quality control, and no claim of scientific validity._
 
 [Unreleased]: https://github.com/ronfinn/openauc-io/commits/main

@@ -62,8 +62,6 @@ Instances of abusive, harassing, or otherwise unacceptable behaviour
 may be reported privately to the project maintainer through the contact
 options listed on the repository owner's GitHub profile.
 
-All reports will be reviewed and investigated promptly and fairly.
-
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
