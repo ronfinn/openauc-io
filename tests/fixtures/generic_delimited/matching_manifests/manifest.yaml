@@ -1,0 +1,10 @@
+schema_version: "1.0"
+format: generic-long
+data_file: scans.csv
+experiment:
+  experiment_id: synthetic-matching-001
+  name: Matching manifests
+  experiment_type: sedimentation_velocity
+defaults:
+  optical_system: absorbance
+  signal_unit: absorbance_unit

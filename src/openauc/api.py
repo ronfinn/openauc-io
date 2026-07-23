@@ -12,12 +12,24 @@ from __future__ import annotations
 
 from openauc import __version__
 from openauc.exceptions import (
+    AmbiguousFormatError,
     ArchiveError,
+    DataConflictError,
     FormatError,
+    ManifestError,
     ObservationError,
     OpenAUCError,
+    ParseError,
     StructuralValidationError,
+    UnsupportedFormatError,
     ValidationError,
+)
+from openauc.formats import (
+    DetectionResult,
+    FormatInfo,
+    GenericManifest,
+    available_formats,
+    load,
 )
 from openauc.models import (
     AUCExperiment,
@@ -42,22 +54,30 @@ from openauc.models import (
 
 __all__ = [
     "AUCExperiment",
+    "AmbiguousFormatError",
     "ArchiveError",
+    "DataConflictError",
+    "DetectionResult",
     "ExperimentMetadata",
     "ExperimentType",
     "FormatError",
+    "FormatInfo",
+    "GenericManifest",
     "ImportProvenance",
     "InstrumentMetadata",
+    "ManifestError",
     "ObservationError",
     "Observations",
     "OpenAUCError",
     "OpticalSystem",
+    "ParseError",
     "Quantity",
     "RadiusAxisMode",
     "SampleMetadata",
     "ScanMetadata",
     "StructuralValidationError",
     "Unit",
+    "UnsupportedFormatError",
     "ValidationError",
     "ValidationIssue",
     "ValidationReport",
@@ -65,5 +85,7 @@ __all__ = [
     "ValueProvenance",
     "ValueStatus",
     "__version__",
+    "available_formats",
+    "load",
     "validate_experiment_structure",
 ]

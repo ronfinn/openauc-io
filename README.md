@@ -53,8 +53,29 @@ The CLI currently reports the version:
 uv run openauc version
 ```
 
-The canonical data model (Phase 2) can be constructed in memory. It preserves
-raw observations, retains declared units, represents missing/unknown values
+Generic delimited (CSV/TSV) experiments can be loaded via a manifest:
+
+```python
+import openauc
+
+experiment = openauc.load("path/to/experiment")   # a directory with a manifest
+print(experiment.summary())
+print(experiment.validate_structure())
+
+# Discover the registered parsers:
+for info in openauc.available_formats():
+    print(info.format_id, "-", info.name)
+```
+
+`load` reads generic long- and wide-format CSV/TSV described by a JSON (or YAML)
+manifest. It preserves raw values and order, never interpolates or converts
+units, represents missing/unknown metadata explicitly, and reports ambiguous or
+malformed input with clear errors. See the
+[format docs](docs/formats/generic-delimited.md). Vendor formats (Beckman,
+Optima, OpenAUC, SEDFIT/SEDPHAT) and AUCX archives are **not** supported yet.
+
+The canonical data model can also be constructed in memory. It preserves raw
+observations, retains declared units, represents missing/unknown values
 explicitly, and supports both shared and per-scan radius axes — with no silent
 interpolation or unit conversion:
 
@@ -87,11 +108,12 @@ assert report.is_valid
 ```
 
 Structural validation and `summary()` describe data structure only; they make no
-claim about scientific validity or suitability for analysis. Reading and writing
-files (CSV/TSV, `.aucx`), plotting, and scientific analysis arrive in later
-phases — see the roadmap in
-[`development-log/0001-project-foundation.md`](development-log/0001-project-foundation.md)
-and the concept docs under [`docs/concepts/`](docs/concepts/).
+claim about scientific validity or suitability for analysis. Writing `.aucx`
+archives, plotting, vendor-format readers, and scientific analysis arrive in
+later phases — see the roadmap in
+[`development-log/0001-project-foundation.md`](development-log/0001-project-foundation.md),
+the [format docs](docs/formats/) and the concept docs under
+[`docs/concepts/`](docs/concepts/).
 
 ## Development
 
@@ -110,7 +132,10 @@ Decision Records under [`docs/decisions/`](docs/decisions/).
 
 - Architecture Decision Records: [`docs/decisions/`](docs/decisions/)
 - Development log: [`development-log/`](development-log/)
-- Format specifications: [`docs/formats/`](docs/formats/)
+- Format specifications: [`docs/formats/`](docs/formats/) —
+  [generic delimited](docs/formats/generic-delimited.md),
+  [manifest v1](docs/formats/manifest-v1.md),
+  [parser detection](docs/formats/parser-detection.md)
 - Concepts: [`docs/concepts/`](docs/concepts/) — [data model](docs/concepts/data-model.md),
   [units](docs/concepts/units.md),
   [missing & unknown values](docs/concepts/missing-and-unknown-values.md),

@@ -8,11 +8,16 @@ raise them add the behaviour.
 from __future__ import annotations
 
 __all__ = [
+    "AmbiguousFormatError",
     "ArchiveError",
+    "DataConflictError",
     "FormatError",
+    "ManifestError",
     "ObservationError",
     "OpenAUCError",
+    "ParseError",
     "StructuralValidationError",
+    "UnsupportedFormatError",
     "ValidationError",
 ]
 
@@ -44,6 +49,48 @@ class ObservationError(OpenAUCError):
 
 class FormatError(OpenAUCError):
     """Raised when input cannot be read as its declared format."""
+
+
+class UnsupportedFormatError(FormatError):
+    """Raised when no registered parser can handle the input.
+
+    Also raised when an explicitly requested format identifier is not
+    registered.
+    """
+
+
+class AmbiguousFormatError(FormatError):
+    """Raised when input cannot be resolved to a single parser or manifest.
+
+    Examples: two parsers report materially similar detection confidence; a
+    directory contains both ``manifest.json`` and ``manifest.yaml`` without an
+    explicit choice; or the delimiter cannot be determined unambiguously.
+    """
+
+
+class ParseError(FormatError):
+    """Raised when a data file is structurally malformed for its format.
+
+    Examples: missing required columns, non-numeric or non-finite radius or
+    signal values, or inconsistent field counts.
+    """
+
+
+class ManifestError(OpenAUCError):
+    """Raised when an experiment manifest is invalid or unsafe.
+
+    Examples: unknown schema version, a data path that escapes the experiment
+    directory, or a manifest that fails schema validation.
+    """
+
+
+class DataConflictError(OpenAUCError):
+    """Raised when independent sources disagree.
+
+    Examples: duplicate ``(scan, radius)`` observations, the same metadatum
+    supplied with different values in the table and the manifest, or file
+    contents that contradict the manifest's declared format.
+    """
 
 
 class ArchiveError(OpenAUCError):

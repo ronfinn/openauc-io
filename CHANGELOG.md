@@ -30,8 +30,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ObservationError` and `StructuralValidationError`. Concept docs under
   `docs/concepts/` and an API reference at `docs/api.md`.
 
-_Phase 2 provides data representation and structural validation only. There is
-no CSV/TSV parsing, AUCX archive I/O, plotting, unit conversion, or scientific
-quality control, and no claim of scientific validity._
+- Phase 3 — generic delimited (CSV/TSV) ingestion (`openauc.formats`): the
+  `openauc.load(path, *, format=None, manifest=None)` entry point and
+  `openauc.available_formats()`; a parser plugin registry with confidence-based
+  detection (ADR-0004); a typed, versioned experiment manifest (JSON canonical,
+  YAML for authoring) with safe relative-path validation; `generic-long` and
+  `generic-wide` parsers that preserve raw values and order, build shared- or
+  per-scan-axis observations without interpolation, retain declared units, and
+  populate `ImportProvenance`. Adds `UnsupportedFormatError`,
+  `AmbiguousFormatError`, `ManifestError`, `ParseError` and `DataConflictError`;
+  a machine-readable schema at `schemas/generic-manifest-v1.schema.json`; and
+  docs under `docs/formats/`.
+
+_Phase 3 ingests generic CSV/TSV only. Vendor/instrument formats, AUCX archive
+I/O, plotting, automatic unit conversion, and scientific quality control are not
+implemented, and no claim of scientific validity is made. Checksum (SHA-256)
+computation remains deferred to Phase 6 (ADR-0003); `ImportProvenance.sha256` is
+left `None`._
 
 [Unreleased]: https://github.com/ronfinn/openauc-io/commits/main

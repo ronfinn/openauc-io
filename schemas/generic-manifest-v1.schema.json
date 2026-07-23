@@ -1,0 +1,688 @@
+{
+  "$defs": {
+    "ExperimentType": {
+      "description": "The kind of AUC experiment. ``UNKNOWN`` is explicit, never inferred.",
+      "enum": [
+        "sedimentation_velocity",
+        "sedimentation_equilibrium",
+        "other",
+        "unknown"
+      ],
+      "title": "ExperimentType",
+      "type": "string"
+    },
+    "ManifestDefaults": {
+      "additionalProperties": false,
+      "description": "Scan-level defaults applied where the table does not supply a value.\n\nA default that conflicts with a value supplied in the table is an error, not\nan override (the parser raises :class:`DataConflictError`).",
+      "properties": {
+        "cell": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cell"
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "optical_system": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpticalSystem"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rotor_speed_rpm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotor Speed Rpm"
+        },
+        "signal_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Signal Unit"
+        },
+        "temperature_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Temperature C"
+        },
+        "wavelength_nm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wavelength Nm"
+        }
+      },
+      "title": "ManifestDefaults",
+      "type": "object"
+    },
+    "ManifestExperiment": {
+      "additionalProperties": false,
+      "description": "Experiment identity, mirroring the canonical experiment metadata.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "experiment_id": {
+          "title": "Experiment Id",
+          "type": "string"
+        },
+        "experiment_type": {
+          "$ref": "#/$defs/ExperimentType",
+          "default": "unknown"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "operator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Operator"
+        }
+      },
+      "required": [
+        "experiment_id"
+      ],
+      "title": "ManifestExperiment",
+      "type": "object"
+    },
+    "ManifestInstrument": {
+      "additionalProperties": false,
+      "description": "Optional instrument and run metadata. All fields optional.",
+      "properties": {
+        "cell": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cell"
+        },
+        "centrepiece": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Centrepiece"
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "nominal_speed_rpm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nominal Speed Rpm"
+        },
+        "optical_system": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpticalSystem"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rotor_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotor Id"
+        },
+        "serial_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Serial Number"
+        },
+        "temperature_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Temperature C"
+        },
+        "wavelength_nm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wavelength Nm"
+        }
+      },
+      "title": "ManifestInstrument",
+      "type": "object"
+    },
+    "ManifestSample": {
+      "additionalProperties": false,
+      "description": "Optional sample/buffer metadata.",
+      "properties": {
+        "buffer_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Buffer Description"
+        },
+        "concentration_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Concentration Unit"
+        },
+        "concentration_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Concentration Value"
+        },
+        "density": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Density"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "partial_specific_volume": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Partial Specific Volume"
+        },
+        "sample_id": {
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "viscosity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Viscosity"
+        }
+      },
+      "required": [
+        "sample_id"
+      ],
+      "title": "ManifestSample",
+      "type": "object"
+    },
+    "OpticalSystem": {
+      "description": "Optical detection systems the model can *represent*.\n\nRepresentation support is not a claim that file import or scientific\ninterpretation is implemented or validated for every system.",
+      "enum": [
+        "absorbance",
+        "interference",
+        "fluorescence",
+        "intensity",
+        "unknown"
+      ],
+      "title": "OpticalSystem",
+      "type": "string"
+    },
+    "WideColumns": {
+      "additionalProperties": false,
+      "description": "Wide-format column mapping: the radius column and the signal columns.",
+      "properties": {
+        "radius": {
+          "title": "Radius",
+          "type": "string"
+        },
+        "scans": {
+          "items": {
+            "$ref": "#/$defs/WideScanColumn"
+          },
+          "title": "Scans",
+          "type": "array"
+        }
+      },
+      "required": [
+        "radius",
+        "scans"
+      ],
+      "title": "WideColumns",
+      "type": "object"
+    },
+    "WideScanColumn": {
+      "additionalProperties": false,
+      "description": "Maps one wide-format signal column to a scan and its metadata.",
+      "properties": {
+        "cell": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cell"
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "column": {
+          "title": "Column",
+          "type": "string"
+        },
+        "elapsed_seconds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Seconds"
+        },
+        "optical_system": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpticalSystem"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rotor_speed_rpm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rotor Speed Rpm"
+        },
+        "scan_id": {
+          "title": "Scan Id",
+          "type": "string"
+        },
+        "source_scan_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Scan Id"
+        },
+        "temperature_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Temperature C"
+        },
+        "wavelength_nm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wavelength Nm"
+        }
+      },
+      "required": [
+        "column",
+        "scan_id"
+      ],
+      "title": "WideScanColumn",
+      "type": "object"
+    }
+  },
+  "$id": "https://openauc.io/schemas/generic-manifest-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The top-level manifest model.",
+  "properties": {
+    "columns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WideColumns"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "data_file": {
+      "title": "Data File",
+      "type": "string"
+    },
+    "defaults": {
+      "$ref": "#/$defs/ManifestDefaults",
+      "default": {
+        "cell": null,
+        "channel": null,
+        "optical_system": null,
+        "rotor_speed_rpm": null,
+        "signal_unit": null,
+        "temperature_c": null,
+        "wavelength_nm": null
+      }
+    },
+    "delimiter": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Delimiter"
+    },
+    "experiment": {
+      "$ref": "#/$defs/ManifestExperiment"
+    },
+    "extension": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Extension"
+    },
+    "format": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Format"
+    },
+    "instrument": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ManifestInstrument"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "samples": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ManifestSample"
+      },
+      "title": "Samples",
+      "type": "array"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "data_file",
+    "experiment"
+  ],
+  "title": "openauc generic experiment manifest (v1)",
+  "type": "object"
+}

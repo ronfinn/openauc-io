@@ -1,0 +1,11 @@
+schema_version: "1.0"
+format: generic-long
+data_file: scans.tsv
+experiment:
+  experiment_id: synthetic-long-tsv-001
+  name: Synthetic long TSV
+  experiment_type: sedimentation_velocity
+defaults:
+  optical_system: absorbance
+  signal_unit: absorbance_unit
+notes: Synthetic fixture; safe to redistribute.

@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "format": "generic-long",
+  "data_file": "scans.csv",
+  "experiment": {"experiment_id": "synthetic-duplicate-001"},
+  "defaults": {"signal_unit": "absorbance_unit"}
+}

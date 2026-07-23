@@ -1,0 +1,20 @@
+schema_version: "1.0"
+format: generic-wide
+data_file: scans.tsv
+experiment:
+  experiment_id: synthetic-wide-tsv-001
+  name: Synthetic wide TSV
+  experiment_type: sedimentation_velocity
+defaults:
+  optical_system: absorbance
+  signal_unit: absorbance_unit
+columns:
+  radius: radius_cm
+  scans:
+    - column: scan_001
+      scan_id: scan_001
+      elapsed_seconds: 0
+    - column: scan_002
+      scan_id: scan_002
+      elapsed_seconds: 600
+notes: Synthetic fixture; safe to redistribute.

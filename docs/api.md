@@ -1,8 +1,27 @@
-# API reference (Phase 2)
+# API reference
 
 The stable public surface is `openauc.api` (re-exported from the top-level
 `openauc` package). The canonical model types are also importable from
 `openauc.models`. Internal module paths are not part of the public contract.
+
+## Ingestion (Phase 3)
+
+```python
+import openauc
+
+experiment = openauc.load(path, *, format=None, manifest=None)  # -> AUCExperiment
+openauc.available_formats()  # -> tuple[FormatInfo, ...]
+```
+
+`load` reads generic delimited (CSV/TSV) experiments via a manifest; see
+[generic delimited](formats/generic-delimited.md), [manifest v1](formats/manifest-v1.md)
+and [parser detection](formats/parser-detection.md). It attaches an
+`ImportProvenance` record (parser id/version, source and manifest/data paths,
+timestamp, warnings, assumptions; `sha256` stays `None` — deferred to Phase 6).
+
+`FormatInfo` fields: `format_id`, `name`, `suffixes`, `layouts`, `limitations`,
+`doc_reference`. Ingestion exceptions: `UnsupportedFormatError`,
+`AmbiguousFormatError`, `ManifestError`, `ParseError`, `DataConflictError`.
 
 ## Model types
 
@@ -59,11 +78,13 @@ validate_experiment_structure(experiment) -> ValidationReport
 ## Exceptions
 
 `OpenAUCError` (base), `ValidationError`, `StructuralValidationError`,
-`ObservationError`, `FormatError`, `ArchiveError`.
+`ObservationError`, `FormatError` (with `UnsupportedFormatError`,
+`AmbiguousFormatError`, `ParseError`), `ManifestError`, `DataConflictError`,
+`ArchiveError`.
 
 ## Note
 
 Structural validation and `summary()` describe data structure only. Neither
 makes any claim about scientific validity or suitability for sedimentation
-analysis. No CSV/TSV parsing, AUCX archive I/O, plotting, or scientific quality
-control is implemented in this phase.
+analysis. Phase 3 adds generic CSV/TSV ingestion; AUCX archive I/O, plotting,
+vendor formats and scientific quality control are not implemented.

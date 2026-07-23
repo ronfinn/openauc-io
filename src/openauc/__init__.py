@@ -7,6 +7,8 @@ validation, plotting and AUCX archival are introduced in later phases; see
 
 from __future__ import annotations
 
-__all__ = ["__version__"]
+from openauc.formats import available_formats, load
+
+__all__ = ["__version__", "available_formats", "load"]
 
 __version__ = "0.1.0.dev0"
