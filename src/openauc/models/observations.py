@@ -19,7 +19,7 @@ invalid :class:`Observations` cannot exist.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import Any
 
 import numpy as np
@@ -290,6 +290,44 @@ class Observations:
         if values.size == 0:
             return None
         return (float(values.min()), float(values.max()))
+
+    def scan_vectors(
+        self, scan_id: str
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        """The ``(radius, signal)`` vectors of one scan, padding excluded.
+
+        Values and their **order are returned exactly as stored** — nothing is
+        sorted, resampled or interpolated. In shared mode the shared radius axis
+        is returned for every scan; in per-scan mode each scan's own axis is
+        returned, with positions whose mask entry is ``False`` removed.
+
+        Raises:
+            KeyError: if ``scan_id`` is not present in this observation set.
+        """
+        try:
+            index = self.scan_ids.index(scan_id)
+        except ValueError as exc:
+            raise KeyError(f"no scan with id {scan_id!r} in observations") from exc
+        if self.mode is RadiusAxisMode.SHARED:
+            radius = np.asarray(self._dataset["radius"].to_numpy(), dtype=float)
+            signal = np.asarray(self._dataset["signal"].to_numpy()[index], dtype=float)
+            return radius, signal
+        keep = self._dataset["mask"].to_numpy()[index]
+        radius = np.asarray(
+            self._dataset["radius"].to_numpy()[index][keep], dtype=float
+        )
+        signal = np.asarray(
+            self._dataset["signal"].to_numpy()[index][keep], dtype=float
+        )
+        return radius, signal
+
+    def iter_scan_vectors(
+        self,
+    ) -> Iterator[tuple[str, NDArray[np.float64], NDArray[np.float64]]]:
+        """Yield ``(scan_id, radius, signal)`` for every scan, in stored order."""
+        for scan_id in self.scan_ids:
+            radius, signal = self.scan_vectors(scan_id)
+            yield scan_id, radius, signal
 
     # -- serialisation -------------------------------------------------------
 

@@ -28,7 +28,7 @@ from openauc.models.experiment import AUCExperiment
 from openauc.models.instrument import InstrumentMetadata
 from openauc.models.metadata import ExperimentMetadata, Quantity
 from openauc.models.observations import Observations
-from openauc.models.provenance import ImportProvenance
+from openauc.models.provenance import ImportProvenance, SourceChecksum
 from openauc.models.readiness import (
     AnalysisReadiness,
     ReadinessAssessment,
@@ -68,6 +68,7 @@ __all__ = [
     "ReadinessStatus",
     "SampleMetadata",
     "ScanMetadata",
+    "SourceChecksum",
     "Unit",
     "ValidationCounts",
     "ValidationIssue",

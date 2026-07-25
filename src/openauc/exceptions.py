@@ -10,12 +10,15 @@ from __future__ import annotations
 __all__ = [
     "AmbiguousFormatError",
     "ArchiveError",
+    "ArchiveIntegrityError",
+    "ArchiveVersionError",
     "DataConflictError",
     "FormatError",
     "ManifestError",
     "ObservationError",
     "OpenAUCError",
     "ParseError",
+    "PlottingError",
     "StructuralValidationError",
     "UnsupportedFormatError",
     "ValidationError",
@@ -94,4 +97,32 @@ class DataConflictError(OpenAUCError):
 
 
 class ArchiveError(OpenAUCError):
-    """Raised when reading or writing an AUCX archive fails."""
+    """Raised when reading or writing an AUCX archive fails.
+
+    Covers container-level problems: an unreadable or unsafe ZIP, a missing or
+    unexpected member, malformed JSON or ``.npy`` payloads, and disagreements
+    between the manifest and the stored arrays.
+    """
+
+
+class ArchiveIntegrityError(ArchiveError):
+    """Raised when an archive's recorded checksums do not verify.
+
+    Integrity only: a passing checksum shows the bytes are unchanged since the
+    archive was written. It is **not** a proof of authenticity or origin.
+    """
+
+
+class ArchiveVersionError(ArchiveError):
+    """Raised when an archive declares an unsupported format version.
+
+    Archives are never silently migrated across format versions.
+    """
+
+
+class PlottingError(OpenAUCError):
+    """Raised when a plot cannot be drawn from the supplied experiment.
+
+    Examples: a requested scan identifier is not present in the observations,
+    or no selected scan carries any observation to draw.
+    """

@@ -9,6 +9,7 @@ import provenance.
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -18,14 +19,16 @@ from openauc.exceptions import (
     ManifestError,
     ParseError,
 )
+from openauc.formats.aucx import AUCX_FORMAT_ID, AUCX_SUFFIX, read_aucx
 from openauc.formats.base import Parser, ParseResult, ResolvedSource, Table
 from openauc.formats.manifest import GenericManifest, load_manifest
 from openauc.formats.registry import detect_parser, get_parser
-from openauc.models import AUCExperiment, ImportProvenance
+from openauc.models import AUCExperiment, ImportProvenance, SourceChecksum
 
 __all__ = ["load"]
 
 _MANIFEST_NAMES = ("manifest.json", "manifest.yaml", "manifest.yml")
+_CHECKSUM_CHUNK_BYTES = 1024 * 1024
 _MANIFEST_SUFFIXES = (".json", ".yaml", ".yml")
 
 
@@ -37,20 +40,29 @@ def load(
 ) -> AUCExperiment:
     """Load a generic delimited AUC experiment into an ``AUCExperiment``.
 
+    Also reads AUCX archives: a ``.aucx`` file, or any path with
+    ``format="aucx"``, is dispatched to the archive reader, which verifies every
+    stored checksum before building a model.
+
     Args:
         path: A directory containing a manifest and data file, a data-file path
-            with an adjacent manifest, or a manifest-file path.
+            with an adjacent manifest, a manifest-file path, or an ``.aucx``
+            archive.
         format: Optional explicit format id (overrides detection and the
             manifest's declared format for parser selection).
         manifest: Optional explicit manifest-file path.
 
     Returns:
-        A canonical :class:`AUCExperiment` with import provenance attached.
+        A canonical :class:`AUCExperiment` with import provenance attached. For
+        an archive this is the provenance stored inside it, unchanged.
     """
     target = Path(path)
     explicit_manifest = Path(manifest) if manifest is not None else None
     if not target.exists():
         raise ParseError(f"path does not exist: {target}")
+
+    if _is_archive_request(target, format):
+        return read_aucx(target)
 
     base_dir, manifest_file, explicit_data = _resolve_layout(target, explicit_manifest)
     manifest_model = load_manifest(manifest_file)
@@ -65,6 +77,13 @@ def load(
     parser, selection_warnings = _select_parser(format, manifest_model, table)
     result = parser.parse(table, source, manifest_model)
     return _with_provenance(result, parser, source, selection_warnings)
+
+
+def _is_archive_request(target: Path, format: str | None) -> bool:
+    """True when this load should go to the AUCX reader rather than a parser."""
+    if format == AUCX_FORMAT_ID:
+        return True
+    return format is None and target.is_file() and target.suffix.lower() == AUCX_SUFFIX
 
 
 # --------------------------------------------------------------------------- #
@@ -225,6 +244,46 @@ def _select_parser(
     return detect_parser(table, manifest), ()
 
 
+def _sha256_of(path: Path) -> tuple[str, int]:
+    """``(hex digest, byte size)`` of ``path``, read in chunks."""
+    digest = hashlib.sha256()
+    size = 0
+    with path.open("rb") as handle:
+        while chunk := handle.read(_CHECKSUM_CHUNK_BYTES):
+            digest.update(chunk)
+            size += len(chunk)
+    return digest.hexdigest(), size
+
+
+def _source_checksums(source: ResolvedSource) -> tuple[SourceChecksum, ...]:
+    """Checksum every file this import actually read.
+
+    Recorded per source rather than collapsed into one field: a manifest-driven
+    import reads at least two files, and a single digest could not say which.
+    """
+    entries: list[SourceChecksum] = []
+    if source.manifest_file is not None:
+        value, size = _sha256_of(source.manifest_file)
+        entries.append(
+            SourceChecksum(
+                role="manifest",
+                filename=source.manifest_file.name,
+                value=value,
+                byte_size=size,
+            )
+        )
+    value, size = _sha256_of(source.data_file)
+    entries.append(
+        SourceChecksum(
+            role="data_file",
+            filename=source.data_file.name,
+            value=value,
+            byte_size=size,
+        )
+    )
+    return tuple(entries)
+
+
 def _with_provenance(
     result: ParseResult,
     parser: Parser,
@@ -241,10 +300,16 @@ def _with_provenance(
         f"manifest: {manifest_name}",
         f"data_file: {source.data_file.name}",
     )
+    checksums = _source_checksums(source)
+    data_digest = next(
+        (entry.value for entry in checksums if entry.role == "data_file"), None
+    )
     provenance = ImportProvenance(
         source_path=str(source.data_file),
         source_filename=source.data_file.name,
-        sha256=None,  # checksum computation is deferred to Phase 6 (ADR-0003)
+        # Mirrors the data-file entry; source_checksums carries every source.
+        sha256=data_digest,
+        source_checksums=checksums,
         parser_name=parser.format_id,
         parser_version=__version__,
         imported_at=datetime.now(UTC),

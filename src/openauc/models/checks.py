@@ -23,8 +23,6 @@ from collections.abc import Callable, Sequence
 from itertools import pairwise
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from openauc.models.enums import (
     ExperimentType,
     OpticalSystem,
@@ -141,16 +139,15 @@ def _aggregate(
 
 
 def _radius_vectors(observations: Observations) -> tuple[tuple[float, ...], ...]:
-    """Per-scan radius vectors with padding excluded (shared axis repeated)."""
-    dataset = observations.dataset
-    if observations.mode is RadiusAxisMode.SHARED:
-        shared = tuple(float(v) for v in dataset["radius"].to_numpy().tolist())
-        return tuple(shared for _ in range(observations.n_scans))
-    radius = dataset["radius"].to_numpy()
-    mask = dataset["mask"].to_numpy()
+    """Per-scan radius vectors with padding excluded (shared axis repeated).
+
+    Uses the public :meth:`~openauc.models.observations.Observations.
+    iter_scan_vectors` accessor rather than reaching into the backing dataset,
+    so masking and ordering are defined in exactly one place.
+    """
     return tuple(
-        tuple(float(v) for v in np.asarray(row[keep], dtype=float).tolist())
-        for row, keep in zip(radius, mask, strict=True)
+        tuple(float(value) for value in radius.tolist())
+        for _, radius, _ in observations.iter_scan_vectors()
     )
 
 

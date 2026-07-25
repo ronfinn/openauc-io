@@ -11,7 +11,7 @@ authors:
 repository-code: "https://github.com/ronfinn/openauc-io"
 url: "https://github.com/ronfinn/openauc-io"
 license: Apache-2.0
-version: 0.1.0.dev0
+version: 0.1.0a1
 keywords:
   - analytical ultracentrifugation
   - AUC

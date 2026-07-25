@@ -3,18 +3,19 @@
 Open-source Python library for importing, validating, standardising, visualising
 and archiving analytical ultracentrifugation (AUC) data.
 
-> **Status: pre-alpha.** Nothing is released yet and APIs will change without
-> notice. Implemented so far: the canonical in-memory data model, generic
-> CSV/TSV ingestion, tiered structural validation, analysis-readiness reporting
-> and structured summaries. **No scientific AUC analysis is implemented** — no
+> **Status: pre-alpha (`0.1.0a1`), not published.** APIs may change without
+> notice. Implemented: the canonical in-memory data model, generic CSV/TSV
+> ingestion, tiered structural validation, analysis-readiness reporting,
+> structured summaries, basic scan plotting, the AUCX archival container, and a
+> command-line interface. **No scientific AUC analysis is implemented** — no
 > sedimentation-velocity or equilibrium analysis, no quality control, no unit
-> conversion — and none is planned for the first release. Plotting, AUCX
-> archives, vendor formats and the CLI command surface are not implemented yet.
+> conversion — and none is planned. Vendor and instrument formats are not
+> supported.
 
 ## Scope
 
 `openauc` aims to support historical and modern AUC formats over time. The
-**first alpha release** is intentionally narrow and will provide:
+**first alpha release** is intentionally narrow and provides:
 
 1. Generic long-format CSV/TSV import.
 2. Generic wide-format CSV/TSV import.
@@ -41,23 +42,53 @@ not copy code or interfaces from those tools.
 
 ## Install (from source)
 
-Not yet published to PyPI. For development:
+Not yet published to PyPI. From a clone:
 
 ```bash
 git clone https://github.com/ronfinn/openauc-io
 cd openauc-io
-uv sync
+uv sync                       # development environment
+```
+
+Or build and install the wheel into any environment:
+
+```bash
+uv build
+pip install dist/openauc-0.1.0a1-py3-none-any.whl
 ```
 
 ## Quickstart
 
-The CLI currently reports the version:
+End to end — load, describe, validate, plot, archive, reload:
 
-```bash
-uv run openauc version
+```python
+import openauc
+from openauc.plotting import plot_scans
+
+experiment = openauc.load("examples/data/demo_experiment")
+print(experiment.summary())
+
+report = experiment.validate()
+ax = plot_scans(experiment)
+
+experiment.export("experiment.aucx")
+restored = openauc.load("experiment.aucx")
+assert restored.to_dict() == experiment.to_dict()
 ```
 
-Generic delimited (CSV/TSV) experiments can be loaded via a manifest:
+The same workflow from the shell:
+
+```bash
+uv run openauc inspect  examples/data/demo_experiment
+uv run openauc validate examples/data/demo_experiment --readiness
+uv run openauc convert  examples/data/demo_experiment experiment.aucx
+uv run openauc validate experiment.aucx
+```
+
+Runnable versions of each step live in [`examples/`](examples/). See
+[docs/cli.md](docs/cli.md) for the command reference and exit codes.
+
+Generic delimited (CSV/TSV) experiments are loaded via a manifest:
 
 ```python
 import openauc
@@ -76,7 +107,7 @@ manifest. It preserves raw values and order, never interpolates or converts
 units, represents missing/unknown metadata explicitly, and reports ambiguous or
 malformed input with clear errors. See the
 [format docs](docs/formats/generic-delimited.md). Vendor formats (Beckman,
-Optima, OpenAUC, SEDFIT/SEDPHAT) and AUCX archives are **not** supported yet.
+Optima, OpenAUC, SEDFIT/SEDPHAT) are **not** supported.
 
 The canonical data model can also be constructed in memory. It preserves raw
 observations, retains declared units, represents missing/unknown values
@@ -139,8 +170,37 @@ meniscus, equilibrium) is out of scope by design. See
 [validation tiers](docs/concepts/validation-tiers.md) and
 [analysis readiness](docs/concepts/analysis-readiness.md).
 
-Writing `.aucx` archives, plotting, vendor-format readers, the CLI command
-surface and any scientific analysis arrive in later phases — see the roadmap in
+## Plotting
+
+```python
+from openauc.plotting import plot_scans
+
+axes = plot_scans(experiment)          # one line per scan, overlaid
+axes.figure.savefig("scans.png")       # works headless; pyplot is not used
+```
+
+Each scan is drawn from its own stored vectors, in stored order — nothing is
+interpolated, resampled, sorted or smoothed, and per-scan radius axes are never
+placed on a common grid. Only the measured series are drawn: no fitting,
+baseline correction or derived overlay. matplotlib loads on the first draw, so
+`import openauc` stays light. See [plotting](docs/concepts/plotting.md).
+
+## AUCX archives
+
+```python
+experiment.export("experiment.aucx")            # atomic, deterministic
+restored = openauc.load("experiment.aucx")      # every checksum verified first
+openauc.inspect_aucx("experiment.aucx")         # what the archive declares
+openauc.validate_aucx("experiment.aucx")        # integrity report, never raises
+```
+
+`.aucx` is a ZIP of JSON metadata and NumPy `.npy` arrays (format version 1.0),
+so dtype, shape, the validity mask and both radius modes survive exactly.
+Checksums provide **integrity, not authenticity** — a verified archive is one
+whose bytes are unchanged, not one whose origin is proven. See
+[AUCX](docs/formats/aucx.md).
+
+Vendor-format readers and any scientific analysis arrive later — see the roadmap in
 [`development-log/0001-project-foundation.md`](development-log/0001-project-foundation.md),
 the [format docs](docs/formats/) and the concept docs under
 [`docs/concepts/`](docs/concepts/).
@@ -165,14 +225,47 @@ Decision Records under [`docs/decisions/`](docs/decisions/).
 - Format specifications: [`docs/formats/`](docs/formats/) —
   [generic delimited](docs/formats/generic-delimited.md),
   [manifest v1](docs/formats/manifest-v1.md),
-  [parser detection](docs/formats/parser-detection.md)
+  [parser detection](docs/formats/parser-detection.md),
+  [AUCX](docs/formats/aucx.md)
 - Concepts: [`docs/concepts/`](docs/concepts/) — [data model](docs/concepts/data-model.md),
   [units](docs/concepts/units.md),
   [missing & unknown values](docs/concepts/missing-and-unknown-values.md),
   [optical systems](docs/concepts/optical-systems.md),
   [validation tiers](docs/concepts/validation-tiers.md),
-  [analysis readiness](docs/concepts/analysis-readiness.md)
+  [analysis readiness](docs/concepts/analysis-readiness.md),
+  [plotting](docs/concepts/plotting.md)
 - API reference: [`docs/api.md`](docs/api.md)
+- Command line: [`docs/cli.md`](docs/cli.md)
+- Examples: [`examples/`](examples/)
+
+## Known limitations
+
+- Pre-alpha; APIs may change without notice.
+- Generic CSV/TSV and AUCX only. **No vendor or instrument formats** — Beckman
+  XL-A/XL-I, Optima, OpenAUC and SEDFIT/SEDPHAT files are not read.
+- One signal unit per observation set; no sample-to-scan linkage.
+- No unit conversion. Declared units are retained, never converted.
+- AUCX holds one experiment per archive, is read whole into memory, and offers
+  no encryption or signatures.
+- Plotting is single-panel overlay only.
+- The CLI has no plotting subcommand and no batch input.
+
+## Scientific non-goals
+
+These are **permanent**, not "not yet":
+
+- no sedimentation-velocity or equilibrium analysis, fitting or modelling;
+- no convection, aggregation, meniscus or equilibrium detection;
+- no data-quality scoring or scientific-suitability judgement — scientific
+  suitability is always reported as `NOT_ASSESSED`;
+- no silent inference of missing metadata, and no interpolation, resampling or
+  reordering of radial observations.
+
+## Reporting problems
+
+Security issues: see [SECURITY.md](SECURITY.md). Contributions and workflow:
+see [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Licence
 

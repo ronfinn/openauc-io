@@ -18,7 +18,6 @@ from openauc.models import (
     RadiusAxisMode,
     ReadinessStatus,
     Unit,
-    ValidationSeverity,
     ValidationTier,
 )
 
@@ -59,7 +58,7 @@ def test_imported_experiments_produce_summaries(fixture: str) -> None:
     assert summary.signal_unit_declared
     assert summary.provenance_available
     assert summary.parser_name == experiment.provenance.parser_name  # type: ignore[union-attr]
-    assert not summary.checksum_available
+    assert summary.checksum_available  # source checksums recorded at import
     text = experiment.summary()
     assert f"Experiment: {summary.experiment_id}" in text
     assert "no assessment of scientific validity" in text.lower()
@@ -72,9 +71,9 @@ def test_metadata_rich_import_is_potentially_ready_for_velocity() -> None:
     report = experiment.validate()
     assert report.is_valid
     assert report.warnings == ()
-    # The only finding is the accepted checksum deferral, and it is INFO.
-    assert report.codes() == ("source_checksum_absent",)
-    assert report.infos[0].severity is ValidationSeverity.INFO
+    # Fully described, and the source checksum is now recorded at import, so
+    # this experiment produces no findings at all.
+    assert report.issues == ()
     assert experiment.validate_structure().issues == ()
 
     assessment = experiment.assess_readiness()

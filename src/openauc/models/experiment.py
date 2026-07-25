@@ -9,6 +9,8 @@ whether a run is scientifically valid or suitable for analysis.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from openauc.models.enums import OpticalSystem
@@ -112,6 +114,26 @@ class AUCExperiment:
         Equivalent to ``self.summary_data().to_text()``.
         """
         return self.summary_data().to_text()
+
+    # -- archival ------------------------------------------------------------
+
+    def export(
+        self,
+        path: str | Path,
+        *,
+        overwrite: bool = False,
+        exported_at: datetime | None = None,
+    ) -> Path:
+        """Write this experiment to an AUCX archive and return the path.
+
+        The archive is written atomically and verified before it replaces
+        anything. See :func:`openauc.export_aucx`.
+        """
+        # Imported here so the model layer does not depend on the format layer
+        # at import time.
+        from openauc.formats.aucx import export_aucx
+
+        return export_aucx(self, path, overwrite=overwrite, exported_at=exported_at)
 
     # -- serialisation -------------------------------------------------------
 

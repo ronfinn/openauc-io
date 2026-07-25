@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "format": "generic-long",
+  "data_file": "scans.csv",
+  "experiment": {
+    "experiment_id": "demo-sv-001",
+    "name": "Demonstration velocity run",
+    "experiment_type": "sedimentation_velocity",
+    "operator": "example"
+  },
+  "instrument": {
+    "manufacturer": "synthetic",
+    "rotor_id": "demo-rotor",
+    "nominal_speed_rpm": 45000,
+    "temperature_c": 20.0
+  },
+  "samples": [
+    {
+      "sample_id": "demo-sample",
+      "description": "Synthetic demonstration sample; not a real measurement.",
+      "buffer_description": "synthetic buffer",
+      "density": 1.0,
+      "viscosity": 0.01,
+      "partial_specific_volume": 0.73
+    }
+  ],
+  "defaults": {
+    "optical_system": "absorbance",
+    "signal_unit": "absorbance_unit",
+    "cell": "1",
+    "channel": "A",
+    "wavelength_nm": 280,
+    "rotor_speed_rpm": 45000,
+    "temperature_c": 20.0
+  },
+  "notes": "Synthetic example data. Safe to redistribute. Not a real experiment."
+}

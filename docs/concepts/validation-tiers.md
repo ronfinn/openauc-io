@@ -89,7 +89,7 @@ Codes are stable. "Blocks" lists the tiers a finding prevents.
 | `scan_count_mismatch` | ERROR | A, B, C, D | Metadata and observations describe different scan sets. |
 | `scan_id_mismatch` | ERROR | A, B, C, D | Same identifiers required, in the same order. |
 | `provenance_absent` | INFO | — | A hand-built experiment legitimately has none. |
-| `source_checksum_absent` | INFO | — | Checksum computation is **intentionally deferred** to the AUCX phase (ADR-0003). Never a warning, never structural. |
+| `source_checksum_absent` | INFO | — | Only fires when provenance exists but records no digest. Since the AUCX phase, imports record source checksums, so this is now rare. Never a warning, never structural. |
 
 ### Structural
 
