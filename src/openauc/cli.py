@@ -1,9 +1,11 @@
-"""Command-line interface for openauc (Phase 1 scaffold).
+"""Command-line interface for openauc.
 
-Only version reporting is wired up so the console-script entry point and CI can
-be exercised. Domain commands (import, validate, summarise, plot, archive) are
-introduced in later phases; see ``docs/decisions/ADR-0004`` and
-``development-log/0001-project-foundation.md``.
+**The CLI itself is still a stub**: only version reporting is wired up, so the
+console-script entry point and CI can be exercised. The library's implemented
+functionality — ingestion, validation, readiness and summaries — is currently
+available through the Python API only. Domain commands (import, validate,
+summarise, plot, archive) arrive with the CLI phase; see
+``docs/decisions/ADR-0004`` and ``development-log/0001-project-foundation.md``.
 """
 
 from __future__ import annotations

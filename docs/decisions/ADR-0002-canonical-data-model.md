@@ -1,10 +1,11 @@
 # ADR-0002 — Canonical in-memory AUC data model
 
-- **Status:** Accepted (Phase 2 — refined; see the Phase 2 amendment below)
-- **Date:** 2026-07-23 (proposed); amended 2026-07-23 (Phase 2)
+- **Status:** Accepted (refined by the Phase 2 and Phase 4 amendments below)
+- **Date:** 2026-07-23 (proposed); amended 2026-07-23 (Phase 2) and 2026-07-25
+  (Phase 4)
 - **Deciders:** Ron Finn
 - **Related:** ADR-0001, ADR-0003, ADR-0004; development-log/0001;
-  development-log/0002
+  development-log/0002; development-log/0004
 
 ## Context
 
@@ -163,3 +164,92 @@ no scientific-suitability judgement.
 (`ImportProvenance`) is implemented now (usable with hand-built synthetic
 experiments); AUCX archive serialisation of provenance remains Phase 6
 (ADR-0003).
+
+---
+
+## Amendment — Phase 4: validation tiers and the minimum metadata set (2026-07-25)
+
+This amendment resolves **development-log Q3** — "what must be present for
+structural validation to pass?" — and records the tier model that answers it.
+
+### Four questions, not one
+
+Validation is **tiered**. `ValidationTier` names four independent questions:
+`ARCHIVAL` (can it be stored and returned unambiguously?), `STRUCTURAL` (is it
+internally consistent and inspectable?), and `SV_READINESS` / `SE_READINESS` (is
+the metadata a future workflow needs present?). Each finding names the tier(s)
+it speaks to and the tier(s) it blocks.
+
+A fifth question — scientific validity or suitability — is **not a tier and is
+never answered**. It is represented permanently as
+`AnalysisKind.SCIENTIFIC_SUITABILITY` with status `ReadinessStatus.NOT_ASSESSED`,
+a constant that is never derived from any finding.
+
+### Four categories, three of them in scope
+
+1. **Construction invariants** — raise at construction; an invalid object cannot
+   exist. Unchanged from Phase 2.
+2. **Structural validation** — cross-object consistency; reported, not raised.
+3. **Analysis-readiness assessment** — metadata presence; reported.
+4. **Scientific quality control** — out of scope, permanently.
+
+### Resolution of Q3
+
+**The minimum for a valid experiment is exactly what construction already
+guarantees, plus unambiguous keying and internal consistency. No metadata field
+is added as a requirement.**
+
+`ARCHIVAL` blocks only on duplicate scan identifiers, duplicate sample
+identifiers, a scan-count mismatch, and a scan-identifier/ordering mismatch.
+`STRUCTURAL` blocks only on no scans, non-positive radial positions, and a
+well-defined optical-system/signal-unit contradiction. That is the complete
+blocking set.
+
+This is deliberately permissive. A historical dataset carrying nothing but an
+identifier, a radius vector and a signal vector is archivable and structurally
+valid. Its sparse metadata is reported explicitly as warnings and informational
+findings — never inferred, never defaulted, and never fatal.
+
+### Reconciliation with "missing required metadata must fail loudly"
+
+The original ADR text and development-log 0001 §6 state that *required* metadata
+must fail validation loudly and that nothing is silently inferred. That boundary
+is **upheld**, on the reading that "required" means the construction-invariant
+set — which does fail loudly, by raising, at construction. Metadata that is
+merely *conventionally desirable* for an analysis was never in that set, and
+adding it would make faithful archival of historical data impossible, defeating
+the project's purpose. Absence is reported explicitly rather than inferred, so
+the no-silent-inference boundary is untouched.
+
+### Severity policy
+
+`ERROR` may block `ARCHIVAL` or `STRUCTURAL` and is the only severity affecting
+`ValidationReport.is_valid`; `WARNING` never blocks either and may block a
+readiness tier; `INFO` blocks nothing. **Readiness findings never carry
+`ERROR`.** This rule is what prevents "structurally valid", "analysis ready" and
+"scientifically valid" from collapsing into one another, and it preserves the
+existing meaning of `validate_structure().is_valid` exactly.
+
+### Determinism
+
+Checks execute in the fixed order of a registry; affected scan identifiers are
+sorted; a condition affecting many scans yields one aggregated finding rather
+than one per scan. Equivalent experiments produce equal reports. No machine
+learning, heuristics or scientific interpretation are involved anywhere.
+
+### Placement and API
+
+Validation, checks, readiness and summaries live under `models/` (see the
+ADR-0001 Phase 4 amendment); the top-level `validation/` package remains
+reserved for future scientific quality control. `AUCExperiment` gains
+`validate()`, `summary_data()` and `assess_readiness()`; `validate_structure()`
+and `summary()` are preserved unchanged in meaning, with `summary()` now
+rendering the structured `ExperimentSummary`.
+
+### Deferred
+
+Two model-level limitations are recorded, not addressed: there is **no
+sample-to-scan linkage** (`ScanMetadata` carries no `sample_id`), so sample
+metadata can only be assessed experiment-wide; and an `Observations` set still
+carries a **single signal unit**, which is why more than one declared optical
+system in one set is reported as an anomaly.

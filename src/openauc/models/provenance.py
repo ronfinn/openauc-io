@@ -1,10 +1,13 @@
 """Provenance representation (area F).
 
 This is an in-memory record of how an experiment was obtained and which values
-were supplied, converted, inferred, user-confirmed or left unknown. It is a
-*representation* only: no parser is implemented in this phase, so provenance is
-constructed by hand for synthetic experiments, and no checksum is computed here.
-AUCX archive serialisation is deliberately out of scope for Phase 2.
+were supplied, converted, inferred, user-confirmed or left unknown. It is
+populated by :func:`openauc.load` for imported experiments and may be
+constructed by hand for synthetic ones.
+
+No checksum is computed here: ``sha256`` is validated when supplied but is left
+``None`` on import, because checksum computation is deferred to the AUCX phase
+(ADR-0003). AUCX archive serialisation of provenance is likewise out of scope.
 """
 
 from __future__ import annotations

@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "format": "generic-long",
+  "data_file": "scans.csv",
+  "experiment": {
+    "experiment_id": "synthetic-readiness-001",
+    "name": "Synthetic metadata-rich velocity run",
+    "experiment_type": "sedimentation_velocity",
+    "operator": "synthetic"
+  },
+  "instrument": {
+    "manufacturer": "synthetic",
+    "model": "synthetic-analytical-ultracentrifuge",
+    "rotor_id": "synthetic-rotor",
+    "nominal_speed_rpm": 45000,
+    "temperature_c": 20.0,
+    "centrepiece": "synthetic-2-channel"
+  },
+  "samples": [
+    {
+      "sample_id": "sample-1",
+      "description": "Synthetic sample; not a real measurement.",
+      "buffer_description": "synthetic buffer",
+      "concentration_value": 0.5,
+      "concentration_unit": "mg/mL",
+      "density": 1.0,
+      "viscosity": 0.01,
+      "partial_specific_volume": 0.73
+    }
+  ],
+  "defaults": {
+    "optical_system": "absorbance",
+    "signal_unit": "absorbance_unit",
+    "cell": "1",
+    "channel": "A",
+    "wavelength_nm": 280,
+    "rotor_speed_rpm": 45000,
+    "temperature_c": 20.0
+  },
+  "notes": "Synthetic fixture with complete readiness metadata; safe to redistribute."
+}

@@ -39,9 +39,20 @@ lists values by category (supplied/converted/inferred/user-confirmed/unknown)
 alongside the source, checksum, parser and any transformations, warnings and
 assumptions.
 
-Because no parser exists in this phase, provenance is constructed by hand for
-synthetic experiments and no checksum is computed. See
+`openauc.load` populates this record on import; it may also be constructed by
+hand for synthetic experiments. No checksum is computed — `sha256` is left
+`None`, because checksum computation is deferred to the AUCX phase
+([ADR-0003](../decisions/ADR-0003-aucx-container-format.md)). See
 [ADR-0002](../decisions/ADR-0002-canonical-data-model.md).
+
+## How absence is reported
+
+Absent values are never replaced by defaults and never make an experiment
+invalid. `experiment.validate()` reports each absence explicitly as a warning or
+informational finding, and `experiment.summary_data().metadata_presence` counts
+`present` / `missing` / `unknown` / `not_applicable` / `absent` separately, so
+the distinctions above survive all the way into a summary. See
+[validation tiers](validation-tiers.md).
 
 ## Observations: the authoritative mask
 
