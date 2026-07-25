@@ -42,10 +42,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a machine-readable schema at `schemas/generic-manifest-v1.schema.json`; and
   docs under `docs/formats/`.
 
+- Phase 4 — tiered validation, analysis readiness and structured summaries: a
+  four-tier validation model (`ARCHIVAL`, `STRUCTURAL`, `SV_READINESS`,
+  `SE_READINESS`) with 26 deterministic checks carrying stable codes, severity,
+  tiers, blocked tiers, observed/expected values and suggested remediation;
+  `experiment.validate()` for the full report and `experiment.assess_readiness()`
+  for per-workflow metadata-presence reporting; a frozen `ExperimentSummary`
+  (with `ValueRange`, `MetadataPresence` and `ValidationCounts`) exposed as
+  `experiment.summary_data()`, of which `summary()` is now the text rendering.
+  Adds `ValidationTier`, `ReadinessStatus` and `AnalysisKind`, and extends
+  `ValidationIssue`/`ValidationReport` with tier-aware fields and filters. This
+  phase resolves open question Q3 (see the ADR-0002 Phase 4 amendment) and marks
+  ADR-0001 Accepted alongside an as-built amendment.
+
+### Changed
+
+- `AUCExperiment.summary()` now renders the structured summary and appends nine
+  further lines (points per scan, total observations, wavelengths, cells,
+  channels, rotor speed, temperature, source checksum, validation counts). Every
+  previously emitted line is preserved verbatim.
+- `validate_structure()` is now defined as the archival and structural findings
+  of `ERROR` or `WARNING` severity; informational and readiness findings are
+  reported by `validate()`. Existing codes, severities and the meaning of
+  `ValidationReport.is_valid` are unchanged.
+
 _Phase 3 ingests generic CSV/TSV only. Vendor/instrument formats, AUCX archive
 I/O, plotting, automatic unit conversion, and scientific quality control are not
 implemented, and no claim of scientific validity is made. Checksum (SHA-256)
 computation remains deferred to Phase 6 (ADR-0003); `ImportProvenance.sha256` is
 left `None`._
+
+_Phase 4 validates and summarises structure and metadata presence only. It never
+judges scientific validity, data quality or suitability for analysis: absent
+metadata is reported, never required, and scientific suitability is permanently
+reported as `NOT_ASSESSED`. Sample-to-scan linkage and heterogeneous per-scan
+signal units remain deferred._
 
 [Unreleased]: https://github.com/ronfinn/openauc-io/commits/main

@@ -12,11 +12,14 @@ from __future__ import annotations
 from enum import StrEnum
 
 __all__ = [
+    "AnalysisKind",
     "ExperimentType",
     "OpticalSystem",
     "RadiusAxisMode",
+    "ReadinessStatus",
     "Unit",
     "ValidationSeverity",
+    "ValidationTier",
     "ValueProvenance",
     "ValueStatus",
 ]
@@ -110,8 +113,65 @@ class ValueProvenance(StrEnum):
 
 
 class ValidationSeverity(StrEnum):
-    """Severity of a structural-validation issue."""
+    """Severity of a validation finding.
+
+    The severity policy is fixed and applied uniformly:
+
+    * ``ERROR`` — may block ``ARCHIVAL`` or ``STRUCTURAL`` validity. Only errors
+      affect :attr:`~openauc.models.validation.ValidationReport.is_valid`.
+    * ``WARNING`` — never blocks archival or structural validity. It either
+      blocks a readiness tier or flags a representational anomaly.
+    * ``INFO`` — descriptive only; blocks nothing.
+
+    Readiness findings never use ``ERROR``.
+    """
 
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
+
+
+class ValidationTier(StrEnum):
+    """The question a validation finding speaks to.
+
+    Tiers are answered independently; a finding may pertain to more than one.
+    Scientific suitability is deliberately **not** a tier — see
+    :class:`ReadinessStatus` and :class:`AnalysisKind`.
+    """
+
+    #: Can the experiment be stored and returned unchanged and unambiguously?
+    ARCHIVAL = "archival"
+    #: Are metadata, scans and observations internally consistent?
+    STRUCTURAL = "structural"
+    #: Is the metadata a future sedimentation-velocity workflow needs present?
+    SV_READINESS = "sv_readiness"
+    #: Is the metadata a future sedimentation-equilibrium workflow needs present?
+    SE_READINESS = "se_readiness"
+
+
+class ReadinessStatus(StrEnum):
+    """Outcome of an analysis-readiness assessment.
+
+    ``POTENTIALLY_READY`` reports that the metadata a future workflow needs is
+    *present*. It is never a statement that the data are correct, of good
+    quality, or scientifically suitable — that is never assessed.
+    """
+
+    POTENTIALLY_READY = "potentially_ready"
+    BLOCKED = "blocked"
+    NOT_APPLICABLE = "not_applicable"
+    NOT_ASSESSED = "not_assessed"
+
+
+class AnalysisKind(StrEnum):
+    """A workflow whose metadata prerequisites can be reported on.
+
+    ``SCIENTIFIC_SUITABILITY`` is included so that "not assessed" is a
+    machine-readable, always-present part of every assessment rather than a
+    prose disclaimer. Its status is permanently
+    :attr:`ReadinessStatus.NOT_ASSESSED`.
+    """
+
+    SEDIMENTATION_VELOCITY = "sedimentation_velocity"
+    SEDIMENTATION_EQUILIBRIUM = "sedimentation_equilibrium"
+    SCIENTIFIC_SUITABILITY = "scientific_suitability"

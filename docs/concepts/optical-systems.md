@@ -13,8 +13,9 @@ enum:
 
 > **Representation is not support.** That the model can *represent* an optical
 > system does **not** mean file import or scientific interpretation for that
-> system is implemented or validated. Phase 2 implements the representation
-> only. No parser exists yet.
+> system is implemented or validated. Generic CSV/TSV import records whatever
+> optical system the manifest declares; no vendor/instrument reader exists, and
+> no optical system is scientifically interpreted.
 
 ## Where it is recorded
 
@@ -38,6 +39,12 @@ scan's optical system and the observations' signal unit:
 — the model does not guess. A clear conflict (e.g. an `ABSORBANCE` scan with a
 `FRINGE` signal unit) is reported as a structural error by
 `experiment.validate_structure()`.
+
+An undeclared optical system is reported separately as a non-blocking
+`optical_system_unknown` warning, and more than one *declared* system in a
+single observation set as `mixed_optical_systems`. A mixture of `UNKNOWN` and
+one declared system is partial metadata, not a mix, and is not flagged as one.
+See [validation tiers](validation-tiers.md).
 
 ## Phase 2 limitation: one signal unit per observation set
 

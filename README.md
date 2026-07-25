@@ -3,9 +3,13 @@
 Open-source Python library for importing, validating, standardising, visualising
 and archiving analytical ultracentrifugation (AUC) data.
 
-> **Status: pre-alpha (Phase 1 foundation).** Nothing is released yet and no
-> scientific functionality is implemented. The current tree is packaging,
-> tooling and documentation scaffolding only. APIs will change without notice.
+> **Status: pre-alpha.** Nothing is released yet and APIs will change without
+> notice. Implemented so far: the canonical in-memory data model, generic
+> CSV/TSV ingestion, tiered structural validation, analysis-readiness reporting
+> and structured summaries. **No scientific AUC analysis is implemented** — no
+> sedimentation-velocity or equilibrium analysis, no quality control, no unit
+> conversion — and none is planned for the first release. Plotting, AUCX
+> archives, vendor formats and the CLI command surface are not implemented yet.
 
 ## Scope
 
@@ -107,10 +111,36 @@ report = experiment.validate_structure()   # structural checks only
 assert report.is_valid
 ```
 
-Structural validation and `summary()` describe data structure only; they make no
-claim about scientific validity or suitability for analysis. Writing `.aucx`
-archives, plotting, vendor-format readers, and scientific analysis arrive in
-later phases — see the roadmap in
+## Validation, readiness and summaries
+
+Validation is **tiered**, and the tiers are answered independently:
+
+```python
+report = experiment.validate()              # archival, structural + readiness
+summary = experiment.summary_data()         # structured facts, JSON-friendly
+assessment = experiment.assess_readiness()  # metadata presence per workflow
+
+assert report.is_valid                      # no ERROR-severity findings
+summary.to_dict()["total_valid_observations"]
+assessment.sedimentation_velocity.status    # POTENTIALLY_READY | BLOCKED | ...
+assessment.scientific_suitability.status    # always NOT_ASSESSED
+```
+
+An experiment is **archivally and structurally valid** as long as its scans and
+observations correspond unambiguously and are internally consistent. Absent
+metadata is *reported*, never required — so a historical dataset with sparse
+metadata stays representable — while readiness reports separately whether the
+metadata a future workflow would need is present.
+
+`openauc` never describes data as *ready*, *scientifically valid* or *suitable
+for analysis*. Scientific suitability is permanently reported as
+`NOT_ASSESSED`, and scientific quality control (convection, aggregation,
+meniscus, equilibrium) is out of scope by design. See
+[validation tiers](docs/concepts/validation-tiers.md) and
+[analysis readiness](docs/concepts/analysis-readiness.md).
+
+Writing `.aucx` archives, plotting, vendor-format readers, the CLI command
+surface and any scientific analysis arrive in later phases — see the roadmap in
 [`development-log/0001-project-foundation.md`](development-log/0001-project-foundation.md),
 the [format docs](docs/formats/) and the concept docs under
 [`docs/concepts/`](docs/concepts/).
@@ -139,7 +169,9 @@ Decision Records under [`docs/decisions/`](docs/decisions/).
 - Concepts: [`docs/concepts/`](docs/concepts/) — [data model](docs/concepts/data-model.md),
   [units](docs/concepts/units.md),
   [missing & unknown values](docs/concepts/missing-and-unknown-values.md),
-  [optical systems](docs/concepts/optical-systems.md)
+  [optical systems](docs/concepts/optical-systems.md),
+  [validation tiers](docs/concepts/validation-tiers.md),
+  [analysis readiness](docs/concepts/analysis-readiness.md)
 - API reference: [`docs/api.md`](docs/api.md)
 
 ## Licence

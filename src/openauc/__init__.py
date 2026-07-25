@@ -1,8 +1,12 @@
 """openauc — import, validate, standardise, visualise and archive AUC data.
 
-This is the Phase 1 package scaffold. The canonical data model, parsers,
-validation, plotting and AUCX archival are introduced in later phases; see
-``development-log/0001-project-foundation.md`` and ``docs/decisions/``.
+Implemented: the canonical in-memory data model, generic CSV/TSV ingestion via
+:func:`openauc.load`, tiered structural validation, analysis-readiness reporting
+and structured experiment summaries.
+
+Not implemented: plotting, AUCX archival, vendor/instrument format readers, unit
+conversion, and any form of scientific analysis or quality control. See
+``development-log/`` and ``docs/decisions/``.
 """
 
 from __future__ import annotations

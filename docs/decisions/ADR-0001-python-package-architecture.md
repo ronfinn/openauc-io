@@ -1,9 +1,10 @@
 # ADR-0001 — Python package architecture
 
-- **Status:** Proposed
-- **Date:** 2026-07-23
+- **Status:** Accepted (amended — see the Phase 4 as-built amendment below)
+- **Date:** 2026-07-23 (proposed); amended and accepted 2026-07-25 (Phase 4)
 - **Deciders:** Ron Finn
-- **Related:** ADR-0002, ADR-0003, ADR-0004; development-log/0001
+- **Related:** ADR-0002, ADR-0003, ADR-0004; development-log/0001;
+  development-log/0004
 
 ## Context
 
@@ -87,3 +88,60 @@ this ADR records the intended architecture for Phase 1.
 - PEP 561 — distributing and packaging type information.
 - Hatchling and uv official documentation.
 - The Python Packaging User Guide, "src layout vs flat layout".
+
+---
+
+## Amendment — as-built architecture (Phase 4, 2026-07-25)
+
+This ADR was written before any code existed and described an intended layout.
+The status is changed to **Accepted** only now, and only alongside this
+amendment, so that the ADR describes the package that actually exists rather
+than one that was planned. The load-bearing decisions — src layout, hatchling,
+uv, a curated `api.py` facade, PEP 561 typing, and the `tests/unit`,
+`tests/integration`, `tests/cli` split with synthetic-only fixtures — were all
+implemented as written and are confirmed.
+
+The following points differ from the original text and are corrected here.
+
+**`registry.py` lives under `formats/`, not at the package root.** The original
+sketch placed the parser registry at `src/openauc/registry.py`. It is
+implemented as `src/openauc/formats/registry.py`, alongside the parser
+interface (`formats/base.py`), the manifest model (`formats/manifest.py`), the
+loader (`formats/loader.py`) and the first-party parsers. The registry only ever
+serves the ingestion layer, so keeping it inside that layer avoids a top-level
+module with a single consumer. ADR-0004 is unaffected.
+
+**Structural validation and readiness live under `models/`, not in a top-level
+`validation/` package.** As-built:
+
+| Module | Contents |
+|--------|----------|
+| `models/validation.py` | `ValidationIssue`, `ValidationReport`, `validate_experiment`, `validate_experiment_structure` |
+| `models/checks.py` | the ordered check registry |
+| `models/readiness.py` | `ReadinessAssessment`, `AnalysisReadiness`, routing |
+| `models/summary.py` | `ExperimentSummary` and its text renderer |
+
+These operate exclusively on the canonical model and are meaningless without it,
+so they sit with it. This continues the placement already recorded in the
+ADR-0002 Phase 2 amendment.
+
+**The top-level `validation/` package remains reserved.** It is deliberately
+unclaimed, for future *scientific* or cross-cutting quality control — the
+category that `openauc` does not implement today and that must never be confused
+with structural validation or readiness reporting. Nothing in Phase 4 was placed
+there.
+
+**`plotting/`, `formats/readers/`, `formats/writers/` and `utilities/` do not
+exist yet.** They remain planned:
+
+- `plotting/` — the plotting phase;
+- AUCX read/write and checksum/provenance helpers — the AUCX phase;
+- a `readers/`/`writers/` split under `formats/` — deferred until there are
+  enough parsers to justify it. Two first-party parsers in one module is not yet
+  a reason to subdivide.
+
+**Consequence.** The facade cost predicted in the original "Negative / costs"
+section is real and recurring: every phase has had to export new public symbols
+through both `models/__init__.py` and `api.py`. This has worked, but it is a
+manual step that a contributor can forget; the test suite asserting the public
+surface is what catches it.

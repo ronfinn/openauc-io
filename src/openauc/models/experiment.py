@@ -11,15 +11,21 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from openauc.models.enums import OpticalSystem, ValueStatus
+from openauc.models.enums import OpticalSystem
 from openauc.models.instrument import InstrumentMetadata
 from openauc.models.metadata import ExperimentMetadata
 from openauc.models.observations import Observations
 from openauc.models.provenance import ImportProvenance
+from openauc.models.readiness import (
+    ReadinessAssessment,
+    assess_experiment_readiness,
+)
 from openauc.models.sample import SampleMetadata
 from openauc.models.scan import ScanMetadata
+from openauc.models.summary import ExperimentSummary, summarise_experiment
 from openauc.models.validation import (
     ValidationReport,
+    validate_experiment,
     validate_experiment_structure,
 )
 
@@ -59,8 +65,29 @@ class AUCExperiment:
     # -- behaviour -----------------------------------------------------------
 
     def validate_structure(self) -> ValidationReport:
-        """Run structural validation and return a report (does not raise)."""
+        """Run archival and structural validation (does not raise).
+
+        Returns the ``ARCHIVAL`` and ``STRUCTURAL`` findings of ``ERROR`` or
+        ``WARNING`` severity. Use :meth:`validate` for the full report across
+        all four tiers, including informational findings.
+        """
         return validate_experiment_structure(self)
+
+    def validate(self) -> ValidationReport:
+        """Run every check across all four tiers (does not raise).
+
+        The report covers archival, structural and both readiness tiers. It
+        makes no claim about scientific validity: see :meth:`assess_readiness`.
+        """
+        return validate_experiment(self)
+
+    def assess_readiness(self) -> ReadinessAssessment:
+        """Report whether the metadata a future workflow needs is present.
+
+        This assesses metadata presence only. Scientific suitability is always
+        reported as ``NOT_ASSESSED``.
+        """
+        return assess_experiment_readiness(self)
 
     def optical_systems(self) -> tuple[OpticalSystem, ...]:
         """Distinct optical systems named across scans (and the instrument)."""
@@ -69,62 +96,22 @@ class AUCExperiment:
             systems.add(self.instrument.optical_system)
         return tuple(sorted(systems, key=lambda s: s.value))
 
+    def summary_data(self) -> ExperimentSummary:
+        """A structured, factual summary of the experiment's structure.
+
+        Holds counts, ranges and metadata-presence facts only — no scientific
+        calculation, quality score or inferred value.
+        """
+        return summarise_experiment(self)
+
     def summary(self) -> str:
         """A factual, human-readable summary of the experiment's structure.
 
         The summary describes structure and metadata only. It makes no claim
         about scientific validity or suitability for sedimentation analysis.
+        Equivalent to ``self.summary_data().to_text()``.
         """
-        meta = self.metadata
-        name_suffix = f" - {meta.name}" if meta.name else ""
-        acquired = meta.acquired_at.isoformat() if meta.acquired_at else "unknown"
-        lines = [
-            f"Experiment: {meta.experiment_id}{name_suffix}",
-            f"  Type: {meta.experiment_type.value}",
-            f"  Acquired: {acquired}",
-            f"  Operator: {meta.operator or 'unknown'}",
-            f"  Scans: {len(self.scans)}",
-            f"  Samples: {len(self.samples)}",
-            "  Optical systems: " + ", ".join(s.value for s in self.optical_systems()),
-            f"  Radius axis: {self.observations.mode.value}",
-            f"  Radius unit: {self.observations.radius_unit.value}",
-            f"  Signal unit: {self.observations.signal_unit.value}",
-        ]
-
-        radius_range = self.observations.radius_range()
-        if radius_range is not None:
-            low, high = radius_range
-            lines.append(
-                f"  Radius range: {low:g} to {high:g} "
-                f"{self.observations.radius_unit.value} (observed)"
-            )
-        else:
-            lines.append("  Radius range: n/a (no observations)")
-
-        elapsed = [
-            scan.elapsed_time.value
-            for scan in self.scans
-            if scan.elapsed_time.status is ValueStatus.PRESENT
-            and scan.elapsed_time.value is not None
-        ]
-        if elapsed:
-            lines.append(
-                f"  Elapsed time: {min(elapsed):g} to {max(elapsed):g} s (observed)"
-            )
-        else:
-            lines.append("  Elapsed time: unknown")
-
-        if self.provenance is not None:
-            parser = self.provenance.parser_name or "unspecified parser"
-            lines.append(f"  Provenance: recorded ({parser})")
-        else:
-            lines.append("  Provenance: not recorded")
-
-        lines.append(
-            "  Note: structural summary only; no assessment of scientific "
-            "validity or suitability for analysis."
-        )
-        return "\n".join(lines)
+        return self.summary_data().to_text()
 
     # -- serialisation -------------------------------------------------------
 

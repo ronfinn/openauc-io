@@ -89,17 +89,34 @@ Construction validates geometry and finiteness and raises
 `ObservationError` on malformed input, so an invalid `Observations` cannot
 exist.
 
-## Validation
+## Validation, readiness and summaries
 
-`experiment.validate_structure()` returns a `ValidationReport` (it never
-raises). It checks representational consistency only — identifier uniqueness,
-scan/observation agreement, positive radius values, and well-defined
-optical-system/signal-unit combinations. It is **not** scientific quality
-control. Field-level invariants (finiteness, non-negative time and wavelength,
-valid masks) are enforced earlier, at construction, and raise immediately.
+Validation is **tiered**, and none of it raises:
 
-See the source module `openauc.models.validation` and the
-[API reference](../api.md).
+```python
+report = experiment.validate_structure()   # archival + structural findings
+report = experiment.validate()             # all four tiers
+assessment = experiment.assess_readiness() # metadata presence per workflow
+summary = experiment.summary_data()        # structured facts
+print(experiment.summary())                # the human-readable rendering
+```
+
+`validate_structure()` checks representational consistency only — identifier
+uniqueness, scan/observation agreement, positive radius values, and well-defined
+optical-system/signal-unit combinations. Field-level invariants (finiteness,
+non-negative time and wavelength, valid masks) are enforced earlier, at
+construction, and raise immediately.
+
+Absent metadata is **reported, never required**: an experiment with sparse
+metadata stays archivally and structurally valid, while
+`assess_readiness()` reports separately whether a future workflow's metadata
+prerequisites are present. Neither is scientific quality control, and scientific
+suitability is permanently reported as `NOT_ASSESSED`.
+
+See [validation tiers](validation-tiers.md), [analysis
+readiness](analysis-readiness.md), the source modules
+`openauc.models.validation`, `openauc.models.checks`, `openauc.models.readiness`
+and `openauc.models.summary`, and the [API reference](../api.md).
 
 ## Serialisation
 
