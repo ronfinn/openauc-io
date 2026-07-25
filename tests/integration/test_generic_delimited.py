@@ -313,7 +313,16 @@ def test_provenance_is_populated() -> None:
     assert prov.parser_name == "generic-long"
     assert prov.parser_version == openauc.__version__
     assert prov.source_filename == "scans.csv"
-    assert prov.sha256 is None  # deferred to Phase 6
+    # Source checksums are computed at import; sha256 mirrors the data file.
+    assert prov.sha256 is not None
+    assert len(prov.sha256) == 64
+    roles = {c.role: c for c in prov.source_checksums}
+    assert set(roles) == {"manifest", "data_file"}
+    assert roles["data_file"].filename == "scans.csv"
+    assert roles["data_file"].value == prov.sha256
+    assert roles["manifest"].value != roles["data_file"].value
+    assert all(c.algorithm == "sha256" for c in prov.source_checksums)
+    assert all((c.byte_size or 0) > 0 for c in prov.source_checksums)
     assert isinstance(prov.imported_at, datetime)
     assert any("manifest:" in a for a in prov.assumptions)
     assert any("data_file:" in a for a in prov.assumptions)

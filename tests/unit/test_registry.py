@@ -91,3 +91,22 @@ def test_register_duplicate_raises() -> None:
 
     with pytest.raises(ValueError, match="already registered"):
         register_parser(Dup)
+
+
+def test_duplicate_archive_format_registration_is_rejected() -> None:
+    import pytest as _pytest
+
+    from openauc.formats import AUCX_FORMAT_ID
+    from openauc.formats.base import FormatInfo
+    from openauc.formats.registry import register_archive_format
+
+    duplicate = FormatInfo(
+        format_id=AUCX_FORMAT_ID,
+        name="duplicate",
+        suffixes=(),
+        layouts=(),
+        limitations=(),
+        doc_reference="",
+    )
+    with _pytest.raises(ValueError, match="already registered"):
+        register_archive_format(duplicate)

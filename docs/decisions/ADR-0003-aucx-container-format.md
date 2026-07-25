@@ -1,9 +1,10 @@
 # ADR-0003 — AUCX container format
 
-- **Status:** Proposed
-- **Date:** 2026-07-23
+- **Status:** Accepted (Phase 6 — implemented; see the Phase 6 amendment below)
+- **Date:** 2026-07-23 (proposed); amended and accepted 2026-07-25 (Phase 6)
 - **Deciders:** Ron Finn
-- **Related:** ADR-0002, ADR-0004; development-log/0001
+- **Related:** ADR-0002, ADR-0004; development-log/0001;
+  development-log/0006
 
 ## Context
 
@@ -98,3 +99,89 @@ Python 3.11–3.13.
   NumPy `.npz`) as design precedent, not as an implementation source.
 - The ZIP file format (PKWARE APPNOTE) and Python's standard-library `zipfile`.
 - FIPS 180-4 (SHA-256) for the integrity checksums.
+
+---
+
+## Amendment — Phase 6 implementation (2026-07-25)
+
+AUCX is implemented and the status is changed to **Accepted** alongside this
+record of what was actually built. The load-bearing choice — a zip of parts
+rather than a single binary file — held up: no compiled backend is needed, and
+the archive is inspectable with `unzip` and any JSON viewer.
+
+### Resolved: Q1, in-archive data encoding
+
+**NumPy `.npy` for every array; JSON for every metadata part.** Parquet, CSV and
+NetCDF were all rejected for version 1.0.
+
+- CSV loses dtype and cannot carry the validity mask without inventing a
+  convention; it would also re-encode floating-point values as text.
+- Parquet and NetCDF are columnar/scientific container formats that would each
+  add a substantial dependency (`pyarrow`, `h5netcdf`/`netCDF4`) for data that
+  is already a small dense array, reintroducing exactly the wheel-availability
+  risk that R4 in development-log 0001 avoided.
+- `.npy` preserves dtype, shape and byte layout exactly, is part of an existing
+  required dependency, and is trivially readable by any NumPy user.
+
+Arrays are always read with `allow_pickle=False`, and object arrays are
+rejected, so opening an archive can never execute code.
+
+### Resolved: Q5, provenance schema and checksum algorithm
+
+**SHA-256 is confirmed**, and the deferral recorded in Phase 3 is now closed:
+source-file digests are computed at import.
+
+A single `sha256` field could not honestly describe an import that reads both a
+manifest and a data file, so `ImportProvenance` gained an additive typed
+`source_checksums: tuple[SourceChecksum, ...]`, each entry naming its `role`
+(`manifest`, `data_file`), filename, algorithm, digest and byte size. The
+original `sha256` field is retained and mirrors the `data_file` entry, so
+existing readers keep working.
+
+Archive provenance separates two things that were previously conflated: the
+experiment's **import** provenance (where the data came from — preserved
+unchanged through a round trip) and the **export** record (`AUCXExport`: format
+version, software and version, export timestamp, checksum algorithm). The export
+record is reached through `inspect_aucx`, deliberately not grafted onto the
+restored model.
+
+### Structure as built
+
+```text
+manifest.json  experiment.json  provenance.json
+arrays/radius.npy  arrays/signal.npy  arrays/mask.npy
+checksums.sha256
+```
+
+A mask is written in **both** radius modes so a reader never infers one; in
+shared mode it must be all-true, because the canonical model cannot represent
+partial validity on a shared axis, and an archive claiming otherwise is
+rejected rather than silently reinterpreted.
+
+### Integrity policy
+
+Every member except `checksums.sha256` is checksummed, and **every digest is
+verified before any model is constructed**. Missing checksum files, malformed
+entries, missing listed members, unlisted extra members and digest mismatches
+are all rejected. `ArchiveIntegrityError` and `ArchiveVersionError` were added
+as subclasses of `ArchiveError`.
+
+**This is integrity checking, not authenticity.** A verified archive is one
+whose bytes are unchanged since it was written; AUCX carries no signature and
+makes no claim about who produced it. Signing is explicitly out of scope for
+version 1.0.
+
+### Determinism and atomicity
+
+Exports are byte-identical for equivalent experiments given the same
+`exported_at`: member order, ZIP timestamps, permission bits, creator system and
+compression are all fixed, and JSON is written with sorted keys. Writes go to a
+sibling temporary file which is read back and verified in full before it
+replaces the destination, so a failure never leaves a partial archive.
+
+### Forward compatibility
+
+`aucx_format_version` is `"1.0"` and is checked on every read. Any other value
+is rejected with `ArchiveVersionError`. **Archives are never silently migrated**;
+a future version that can read 1.0 will do so through an explicit, documented
+path.

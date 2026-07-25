@@ -39,6 +39,9 @@ timestamp, warnings, assumptions; `sha256` stays `None` — deferred to Phase 6)
 | `ExperimentSummary` | pydantic model (frozen) | Structured structural summary. |
 | `ValueRange`, `MetadataPresence`, `ValidationCounts` | pydantic models (frozen) | Summary components. |
 | `ReadinessAssessment`, `AnalysisReadiness` | dataclasses | Metadata-presence reporting. |
+| `SourceChecksum` | pydantic model | One source file's digest, by role. |
+| `AUCXInfo`, `AUCXExport` | pydantic models (frozen) | Archive facts and export record. |
+| `ArchiveValidationReport` | dataclass | Archive-integrity findings. |
 
 ## Enums
 
@@ -71,6 +74,8 @@ Observations.from_dict(data) -> Observations
 Observations.points_per_scan() -> tuple[int, ...]
 Observations.valid_radius_values() -> numpy.ndarray
 Observations.radius_range() -> tuple[float, float] | None
+Observations.scan_vectors(scan_id) -> tuple[ndarray, ndarray]   # (radius, signal)
+Observations.iter_scan_vectors() -> Iterator[tuple[str, ndarray, ndarray]]
 
 Quantity.of(value, unit, *, unit_label=None, provenance=SUPPLIED) -> Quantity
 Quantity.missing() / Quantity.unknown() / Quantity.not_applicable()
@@ -110,6 +115,46 @@ summarise_experiment(experiment) -> ExperimentSummary
 assess_experiment_readiness(experiment) -> ReadinessAssessment
 ```
 
+## AUCX archives
+
+```python
+openauc.export_aucx(experiment, path, *, overwrite=False, exported_at=None) -> Path
+experiment.export(path, *, overwrite=False, exported_at=None) -> Path
+openauc.load("experiment.aucx")           # dispatches on the .aucx suffix
+openauc.load(path, format="aucx")         # or explicitly
+openauc.inspect_aucx(path) -> AUCXInfo                  # verifies; raises
+openauc.validate_aucx(path) -> ArchiveValidationReport  # never raises
+```
+
+A ZIP of JSON metadata and NumPy `.npy` arrays, format version `1.0`. Every
+checksum is verified before a model is constructed; exports are deterministic
+and atomic. Archive integrity is a **separate question** from structural
+validation — a loaded archive still exposes `validate_structure()`,
+`validate()`, `assess_readiness()` and `summary_data()`.
+
+Checksums provide **integrity, not authenticity**. Archive exceptions:
+`ArchiveError`, `ArchiveIntegrityError`, `ArchiveVersionError`. See
+[AUCX](formats/aucx.md).
+
+## Plotting
+
+```python
+from openauc.plotting import plot_scans, plot_scan   # or openauc.api.plot_scans
+
+plot_scans(experiment, *, ax=None, scan_ids=None, title=None, legend=True,
+           label_elapsed=True, colormap="viridis", linewidth=1.0,
+           marker=None) -> matplotlib.axes.Axes
+plot_scan(experiment, scan_id, *, ax=None, ...) -> matplotlib.axes.Axes
+```
+
+Each scan is drawn from its own stored vectors, in stored order: **nothing is
+interpolated, resampled, sorted or smoothed**, and per-scan radius axes are
+never placed on a common grid. Figures are built without `pyplot`, so plotting
+works headless; pass your own `ax` for interactive display. matplotlib loads on
+first draw, so `import openauc` and `openauc.api` stay light —
+`openauc.api.plot_scans` is resolved lazily. Raises `PlottingError`. See
+[plotting](concepts/plotting.md).
+
 ## Validation and readiness (Phase 4)
 
 Validation answers four independent questions, named by `ValidationTier`:
@@ -132,12 +177,13 @@ readiness](concepts/analysis-readiness.md) for routing and blocking sets.
 `OpenAUCError` (base), `ValidationError`, `StructuralValidationError`,
 `ObservationError`, `FormatError` (with `UnsupportedFormatError`,
 `AmbiguousFormatError`, `ParseError`), `ManifestError`, `DataConflictError`,
-`ArchiveError`.
+`ArchiveError` (with `ArchiveIntegrityError`, `ArchiveVersionError`),
+`PlottingError`.
 
 ## Note
 
 Validation, readiness and summaries describe data structure and metadata
 presence only. None of them makes any claim about scientific validity, data
-quality or suitability for sedimentation analysis. AUCX archive I/O, plotting,
-vendor formats, unit conversion, CLI domain commands and scientific quality
-control are not implemented.
+quality or suitability for sedimentation analysis, and plots render only what is
+stored. Archive verification checks integrity, not authenticity. Vendor formats,
+unit conversion and scientific quality control are not implemented.

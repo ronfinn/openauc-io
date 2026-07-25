@@ -13,3 +13,5 @@ optical system and radial axis mean in this library, and how the canonical model
   answers, and the fifth it refuses to.
 - [analysis readiness](analysis-readiness.md) — metadata presence reporting, and
   why scientific suitability is never assessed.
+- [plotting](plotting.md) — basic scan plots that render what is stored and
+  interpolate nothing.

@@ -17,9 +17,44 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-__all__ = ["ImportProvenance"]
+__all__ = ["ImportProvenance", "SourceChecksum"]
 
 _SHA256_RE = re.compile(r"[0-9a-fA-F]{64}")
+
+
+class SourceChecksum(BaseModel):
+    """A checksum of one source file an experiment was read from.
+
+    An import can draw on more than one file — a manifest and a data file, for
+    instance — and each is recorded separately rather than collapsed into a
+    single field. ``role`` names what the file was to the import (``manifest``,
+    ``data_file``), not what it contains.
+
+    A checksum establishes **integrity** — that the bytes are unchanged since
+    they were read. It says nothing about authenticity or origin.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    role: str
+    filename: str
+    algorithm: str = "sha256"
+    value: str
+    byte_size: int | None = None
+
+    @field_validator("value")
+    @classmethod
+    def _validate_digest(cls, value: str) -> str:
+        if not _SHA256_RE.fullmatch(value):
+            raise ValueError("checksum value must be exactly 64 hexadecimal characters")
+        return value.lower()
+
+    @field_validator("role", "filename")
+    @classmethod
+    def _non_empty(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("role and filename must be non-empty strings")
+        return value
 
 
 class ImportProvenance(BaseModel):
@@ -35,7 +70,11 @@ class ImportProvenance(BaseModel):
 
     source_path: str | None = None
     source_filename: str | None = None
+    #: Digest of the primary source (the data file). ``source_checksums`` carries
+    #: every source individually; this field remains for the common single-file
+    #: case and always mirrors the ``data_file`` entry when one exists.
     sha256: str | None = None
+    source_checksums: tuple[SourceChecksum, ...] = ()
     parser_name: str | None = None
     parser_version: str | None = None
     imported_at: datetime | None = None

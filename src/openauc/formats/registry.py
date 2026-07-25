@@ -18,6 +18,7 @@ __all__ = [
     "available_formats",
     "detect_parser",
     "get_parser",
+    "register_archive_format",
     "register_parser",
     "registered_ids",
 ]
@@ -28,6 +29,19 @@ MINIMUM_CONFIDENCE = 0.5
 TIE_MARGIN = 0.15
 
 _REGISTRY: dict[str, Parser] = {}
+
+# Archive formats are not table parsers: they are read whole rather than
+# detected from a delimited table, so they are described here rather than
+# implementing the Parser interface. They still appear in available_formats().
+_ARCHIVE_FORMATS: dict[str, FormatInfo] = {}
+
+
+def register_archive_format(info: FormatInfo) -> FormatInfo:
+    """Register an archive format so it appears in :func:`available_formats`."""
+    if info.format_id in _ARCHIVE_FORMATS or info.format_id in _REGISTRY:
+        raise ValueError(f"a format is already registered for {info.format_id!r}")
+    _ARCHIVE_FORMATS[info.format_id] = info
+    return info
 
 
 def register_parser(cls: type[Parser]) -> type[Parser]:
@@ -56,13 +70,18 @@ def get_parser(format_id: str) -> Parser:
 
 
 def registered_ids() -> tuple[str, ...]:
-    """All registered format identifiers, sorted."""
-    return tuple(sorted(_REGISTRY))
+    """All registered format identifiers, sorted (parsers and archives)."""
+    return tuple(sorted({*_REGISTRY, *_ARCHIVE_FORMATS}))
 
 
 def available_formats() -> tuple[FormatInfo, ...]:
-    """Public descriptions of all registered parsers, sorted by id."""
-    return tuple(_REGISTRY[key].info() for key in sorted(_REGISTRY))
+    """Public descriptions of every registered format, sorted by id.
+
+    Covers both table parsers and archive formats.
+    """
+    descriptions = {key: parser.info() for key, parser in _REGISTRY.items()}
+    descriptions.update(_ARCHIVE_FORMATS)
+    return tuple(descriptions[key] for key in sorted(descriptions))
 
 
 def detect_parser(table: Table, manifest: GenericManifest | None) -> Parser:
