@@ -305,3 +305,144 @@ def test_subprocess_exit_codes_and_stderr(tmp_path: Path) -> None:
     assert result.returncode == ExitCode.INPUT_ERROR
     assert "error:" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+# --------------------------------------------------------------------------- #
+# generate
+# --------------------------------------------------------------------------- #
+
+
+def test_generate_writes_a_loadable_generic_long_dataset(tmp_path: Path) -> None:
+    target = tmp_path / "out"
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            str(target),
+            "--scenario",
+            "moving-boundary",
+            "--scans",
+            "4",
+            "--points",
+            "12",
+            "--seed",
+            "7",
+        ],
+    )
+    assert result.exit_code == ExitCode.OK
+    assert "synthetic" in result.stdout.lower()
+    restored = openauc.load(target)
+    assert len(restored.scans) == 4
+    assert restored.validate_structure().is_valid
+
+
+def test_generate_writes_an_aucx_archive(tmp_path: Path) -> None:
+    target = tmp_path / "demo.aucx"
+    result = runner.invoke(
+        app,
+        ["generate", str(target), "--format", "aucx", "--scans", "3", "--points", "8"],
+    )
+    assert result.exit_code == ExitCode.OK
+    assert openauc.validate_aucx(target).is_valid
+    assert len(openauc.load(target).scans) == 3
+
+
+def test_generate_is_reproducible_for_a_given_seed(tmp_path: Path) -> None:
+    args = [
+        "--format",
+        "aucx",
+        "--scans",
+        "3",
+        "--points",
+        "8",
+        "--seed",
+        "5",
+        "--noise",
+        "0.01",
+    ]
+    first = tmp_path / "a.aucx"
+    second = tmp_path / "b.aucx"
+    runner.invoke(app, ["generate", str(first), *args])
+    runner.invoke(app, ["generate", str(second), *args])
+    assert openauc.load(first).to_dict() == openauc.load(second).to_dict()
+
+
+def test_generate_json_output_declares_synthetic(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app,
+        ["generate", str(tmp_path / "out"), "--scans", "3", "--points", "5", "--json"],
+    )
+    payload = json.loads(result.stdout)
+    assert payload["synthetic"] is True
+    assert payload["scenario"] == "moving-boundary"
+    assert "not a physically validated simulation" in payload["note"]
+
+
+def test_generate_refuses_to_overwrite(tmp_path: Path) -> None:
+    target = tmp_path / "out"
+    base = ["generate", str(target), "--scans", "3", "--points", "5"]
+    assert runner.invoke(app, base).exit_code == ExitCode.OK
+    repeat = runner.invoke(app, base)
+    assert repeat.exit_code == ExitCode.OUTPUT_EXISTS
+    assert runner.invoke(app, [*base, "--overwrite"]).exit_code == ExitCode.OK
+
+
+def test_generate_rejects_an_unknown_scenario(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app, ["generate", str(tmp_path / "out"), "--scenario", "warp-drive"]
+    )
+    assert result.exit_code == ExitCode.INPUT_ERROR
+    assert "unknown scenario" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_generate_rejects_an_unknown_format(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app, ["generate", str(tmp_path / "out"), "--format", "parquet"]
+    )
+    assert result.exit_code == ExitCode.INPUT_ERROR
+    assert "unknown format" in result.output
+
+
+def test_generate_rejects_an_invalid_configuration(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            str(tmp_path / "out"),
+            "--scenario",
+            "invalid-structure",
+            "--scans",
+            "1",
+        ],
+    )
+    assert result.exit_code == ExitCode.INPUT_ERROR
+    assert "invalid configuration" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_generate_refuses_wide_output_for_per_scan_axes(tmp_path: Path) -> None:
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            str(tmp_path / "out"),
+            "--scenario",
+            "per-scan-radius",
+            "--format",
+            "generic-wide",
+        ],
+    )
+    assert result.exit_code == ExitCode.INPUT_ERROR
+    assert "shared radius axis" in result.output
+
+
+def test_generate_help_states_the_output_is_not_a_simulation() -> None:
+    result = runner.invoke(app, ["generate", "--help"])
+    assert result.exit_code == ExitCode.OK
+    text = " ".join(result.stdout.split()).lower()
+    assert "illustrative synthetic" in text
+    assert "not a physically validated simulation" in text
+    assert "lamm-equation" in text
+    for claim in ("scientifically valid", "accurate simulation"):
+        assert claim not in text

@@ -91,6 +91,9 @@ follow_imports_for_stubs = true
 minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --import-mode=importlib --cov=openauc --cov-report=term-missing"
+markers = [
+    "slow: moderate-size performance checks; deselect with -m 'not slow'",
+]
 
 [tool.coverage.run]
 source = ["openauc"]

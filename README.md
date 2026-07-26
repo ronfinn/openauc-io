@@ -185,6 +185,29 @@ placed on a common grid. Only the measured series are drawn: no fitting,
 baseline correction or derived overlay. matplotlib loads on the first draw, so
 `import openauc` stays light. See [plotting](docs/concepts/plotting.md).
 
+## Synthetic data
+
+```python
+from openauc.synthetic import SyntheticExperimentConfig, generate_experiment
+
+experiment = generate_experiment(
+    SyntheticExperimentConfig(scenario="moving-boundary", n_scans=20, seed=42)
+)
+```
+
+```bash
+openauc generate out/demo --scenario moving-boundary --scans 20 --seed 42
+```
+
+Reproducible AUC-*like* datasets for examples, tests and demonstrations, in
+eight scenarios covering both radius modes, sparse metadata, mixed optics, empty
+scans and deliberate structural faults.
+
+> **Illustrative synthetic data.** The curves are closed-form shapes — **not**
+> Lamm-equation solutions, **not** simulations of sedimentation, and carrying no
+> physical parameters. Nothing scientific may be inferred from generated data.
+> See [synthetic data](docs/concepts/synthetic-data.md).
+
 ## AUCX archives
 
 ```python
@@ -233,7 +256,8 @@ Decision Records under [`docs/decisions/`](docs/decisions/).
   [optical systems](docs/concepts/optical-systems.md),
   [validation tiers](docs/concepts/validation-tiers.md),
   [analysis readiness](docs/concepts/analysis-readiness.md),
-  [plotting](docs/concepts/plotting.md)
+  [plotting](docs/concepts/plotting.md),
+  [synthetic data](docs/concepts/synthetic-data.md)
 - API reference: [`docs/api.md`](docs/api.md)
 - Command line: [`docs/cli.md`](docs/cli.md)
 - Examples: [`examples/`](examples/)

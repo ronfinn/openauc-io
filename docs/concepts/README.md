@@ -15,3 +15,5 @@ optical system and radial axis mean in this library, and how the canonical model
   why scientific suitability is never assessed.
 - [plotting](plotting.md) — basic scan plots that render what is stored and
   interpolate nothing.
+- [synthetic data](synthetic-data.md) — reproducible illustrative datasets for
+  tests and demonstrations; not a simulation.

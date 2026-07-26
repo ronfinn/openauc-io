@@ -136,6 +136,31 @@ Checksums provide **integrity, not authenticity**. Archive exceptions:
 `ArchiveError`, `ArchiveIntegrityError`, `ArchiveVersionError`. See
 [AUCX](formats/aucx.md).
 
+## Synthetic data
+
+```python
+from openauc.synthetic import SyntheticExperimentConfig, generate_experiment
+
+experiment = generate_experiment(
+    SyntheticExperimentConfig(scenario="moving-boundary", n_scans=20, seed=42)
+)
+
+write_generic_long(experiment, "out/long")   # manifest.json + scans.csv
+write_generic_wide(experiment, "out/wide")   # shared-axis experiments only
+write_aucx(experiment, "out/demo.aucx")
+```
+
+Reproducible AUC-*like* datasets for examples, tests and demonstrations. The
+same configuration and seed always produce the same experiment, and NumPy's
+global random state is never touched.
+
+**Illustrative synthetic data only.** The curves are closed-form shapes, not
+Lamm-equation solutions, not simulations of sedimentation, and carry no physical
+parameters — none may be inferred from them. Scenarios: `moving-boundary`,
+`equilibrium-profile`, `static-profile`, `per-scan-radius`, `sparse-metadata`,
+`mixed-optics`, `empty-scans`, `invalid-structure`. Raises
+`SyntheticWriteError`. See [synthetic data](concepts/synthetic-data.md).
+
 ## Plotting
 
 ```python
@@ -178,7 +203,7 @@ readiness](concepts/analysis-readiness.md) for routing and blocking sets.
 `ObservationError`, `FormatError` (with `UnsupportedFormatError`,
 `AmbiguousFormatError`, `ParseError`), `ManifestError`, `DataConflictError`,
 `ArchiveError` (with `ArchiveIntegrityError`, `ArchiveVersionError`),
-`PlottingError`.
+`PlottingError`, `SyntheticWriteError`.
 
 ## Note
 
