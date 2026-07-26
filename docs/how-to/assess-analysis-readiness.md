@@ -79,7 +79,7 @@ for issue in sv.advisory_issues:
 ## The permanent non-assessment
 
 ```python
-assessment.scientific_suitability.status   # always NOT_ASSESSED
+assessment.scientific_suitability.status  # always NOT_ASSESSED
 ```
 
 Present in **every** assessment, as a machine-readable entry rather than a prose

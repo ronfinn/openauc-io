@@ -60,12 +60,12 @@ statement that no scientific claim is made.
 ```python
 summary = experiment.summary_data()
 
-summary.n_scans                    # int
-summary.total_valid_observations   # int
-summary.points_per_scan            # tuple[int, ...]
-summary.radius.render()            # '5.9 to 7.2 cm (observed)'
-summary.elapsed_time.minimum       # float | None
-summary.to_dict()                  # JSON-friendly dict
+summary.n_scans  # int
+summary.total_valid_observations  # int
+summary.points_per_scan  # tuple[int, ...]
+summary.radius.render()  # '5.9 to 7.2 cm (observed)'
+summary.elapsed_time.minimum  # float | None
+summary.to_dict()  # JSON-friendly dict
 ```
 
 A **frozen** pydantic model. Every collection is a tuple; there are no mutable
@@ -83,8 +83,8 @@ for entry in summary.metadata_presence:
 
 ```python
 report = experiment.validate_structure()
-report.is_valid        # bool — True when there are no ERROR findings
-report.errors          # tuple[ValidationIssue, ...]
+report.is_valid  # bool — True when there are no ERROR findings
+report.errors  # tuple[ValidationIssue, ...]
 report.warnings
 ```
 
@@ -95,8 +95,8 @@ Returns the **`ARCHIVAL`** and **`STRUCTURAL`** findings of `ERROR` or
 
 ```python
 full = experiment.validate()
-full.counts()          # (errors, warnings, infos)
-full.codes()           # ('cell_absent', 'rotor_speed_absent', ...)
+full.counts()  # (errors, warnings, infos)
+full.codes()  # ('cell_absent', 'rotor_speed_absent', ...)
 ```
 
 The superset: all four tiers, all severities, including informational findings.
@@ -106,9 +106,9 @@ The superset: all four tiers, all severities, including informational findings.
 ```python
 from openauc.models import ValidationSeverity, ValidationTier
 
-full.by_code("rotor_speed_absent")                # tuple of matching issues
-full.for_tiers(ValidationTier.SV_READINESS)       # a narrowed report
-full.blocking_for(ValidationTier.SV_READINESS)    # what prevents that tier
+full.by_code("rotor_speed_absent")  # tuple of matching issues
+full.for_tiers(ValidationTier.SV_READINESS)  # a narrowed report
+full.blocking_for(ValidationTier.SV_READINESS)  # what prevents that tier
 full.for_tiers(
     ValidationTier.STRUCTURAL,
     severities=(ValidationSeverity.ERROR,),
@@ -129,10 +129,10 @@ for issue in full.warnings:
 ```python
 assessment = experiment.assess_readiness()
 sv = assessment.sedimentation_velocity
-sv.status          # ReadinessStatus
-sv.is_blocked      # bool
-sv.blocking_issues # findings that prevent this tier
-sv.advisory_issues # findings that pertain to it but block nothing
+sv.status  # ReadinessStatus
+sv.is_blocked  # bool
+sv.blocking_issues  # findings that prevent this tier
+sv.advisory_issues  # findings that pertain to it but block nothing
 ```
 
 ## 10. Reading the four statuses
@@ -145,7 +145,7 @@ sv.advisory_issues # findings that pertain to it but block nothing
 | `NOT_ASSESSED` | Not evaluated — and, for scientific suitability, never will be. |
 
 ```python
-assessment.scientific_suitability.status   # always NOT_ASSESSED
+assessment.scientific_suitability.status  # always NOT_ASSESSED
 ```
 
 That entry is a constant. It is never derived from any finding.
@@ -166,10 +166,10 @@ each returns its own. Nothing is sorted or resampled.
 Other accessors:
 
 ```python
-experiment.observations.mode              # RadiusAxisMode.SHARED | PER_SCAN
-experiment.observations.scan_ids          # tuple[str, ...]
-experiment.observations.points_per_scan() # tuple[int, ...]
-experiment.observations.radius_range()    # (min, max) | None
+experiment.observations.mode  # RadiusAxisMode.SHARED | PER_SCAN
+experiment.observations.scan_ids  # tuple[str, ...]
+experiment.observations.points_per_scan()  # tuple[int, ...]
+experiment.observations.radius_range()  # (min, max) | None
 ```
 
 ## 12. Plotting
@@ -177,9 +177,9 @@ experiment.observations.radius_range()    # (min, max) | None
 ```python
 from openauc.plotting import plot_scan, plot_scans
 
-ax = plot_scans(experiment)                  # all scans overlaid
+ax = plot_scans(experiment)  # all scans overlaid
 ax = plot_scans(experiment, scan_ids=["scan_001", "scan_002"])
-ax = plot_scan(experiment, "scan_001")       # exactly one
+ax = plot_scan(experiment, "scan_001")  # exactly one
 ```
 
 Both return a `matplotlib.axes.Axes`. matplotlib loads on the first draw.
@@ -196,6 +196,7 @@ create your own axes and pass them in:
 
 ```python
 import matplotlib.pyplot as plt
+
 fig, ax = plt.subplots()
 plot_scans(experiment, ax=ax)
 plt.show()
@@ -204,7 +205,7 @@ plt.show()
 ## 14. Export to AUCX
 
 ```python
-path = experiment.export("demo.aucx")                    # refuses to overwrite
+path = experiment.export("demo.aucx")  # refuses to overwrite
 path = experiment.export("demo.aucx", overwrite=True)
 ```
 
@@ -237,9 +238,15 @@ Everything derives from `OpenAUCError`:
 
 ```python
 from openauc.exceptions import (
-    OpenAUCError, ManifestError, ParseError, DataConflictError,
-    ArchiveError, ArchiveIntegrityError, ArchiveVersionError,
-    PlottingError, StructuralValidationError,
+    OpenAUCError,
+    ManifestError,
+    ParseError,
+    DataConflictError,
+    ArchiveError,
+    ArchiveIntegrityError,
+    ArchiveVersionError,
+    PlottingError,
+    StructuralValidationError,
 )
 
 try:
@@ -255,7 +262,7 @@ except OpenAUCError as exc:
 Validation never raises — unless you ask it to:
 
 ```python
-experiment.validate_structure().raise_if_invalid()   # StructuralValidationError
+experiment.validate_structure().raise_if_invalid()  # StructuralValidationError
 ```
 
 ## Next step

@@ -18,15 +18,21 @@ to serialise an array layer it does not own.
 
 ```python
 from openauc.models import (
-    AUCExperiment, ExperimentMetadata, ScanMetadata, Observations, Quantity,
-    Unit, OpticalSystem,
+    AUCExperiment,
+    ExperimentMetadata,
+    ScanMetadata,
+    Observations,
+    Quantity,
+    Unit,
+    OpticalSystem,
 )
 
 experiment = AUCExperiment(
     metadata=ExperimentMetadata(experiment_id="exp-1"),
     scans=(
         ScanMetadata(
-            scan_id="scan-1", index=0,
+            scan_id="scan-1",
+            index=0,
             elapsed_time=Quantity.of(0.0, Unit.SECOND),
             optical_system=OpticalSystem.ABSORBANCE,
         ),
@@ -76,12 +82,12 @@ authoritative rather than relying on `NaN`.
 
 ```python
 obs = Observations.from_per_scan(
-    radii=[[6.0, 6.1, 6.2], [6.0, 6.05]],   # different lengths
+    radii=[[6.0, 6.1, 6.2], [6.0, 6.05]],  # different lengths
     signals=[[0.1, 0.2, 0.3], [0.4, 0.5]],
     scan_ids=["a", "b"],
     signal_unit=Unit.FRINGE,
 )
-obs.points_per_scan()      # (3, 2) — real observations per scan
+obs.points_per_scan()  # (3, 2) — real observations per scan
 obs.valid_radius_values()  # excludes padding
 ```
 
@@ -94,11 +100,11 @@ exist.
 Validation is **tiered**, and none of it raises:
 
 ```python
-report = experiment.validate_structure()   # archival + structural findings
-report = experiment.validate()             # all four tiers
-assessment = experiment.assess_readiness() # metadata presence per workflow
-summary = experiment.summary_data()        # structured facts
-print(experiment.summary())                # the human-readable rendering
+report = experiment.validate_structure()  # archival + structural findings
+report = experiment.validate()  # all four tiers
+assessment = experiment.assess_readiness()  # metadata presence per workflow
+summary = experiment.summary_data()  # structured facts
+print(experiment.summary())  # the human-readable rendering
 ```
 
 `validate_structure()` checks representational consistency only — identifier

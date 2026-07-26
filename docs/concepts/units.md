@@ -45,7 +45,7 @@ rejected.
 ```python
 from openauc.models import Quantity, Unit, ValueProvenance
 
-Quantity.of(50000.0, Unit.RPM)                       # present, supplied
-Quantity.of(0.5, Unit.OTHER, unit_label="mg/mL")     # open-ended unit retained
+Quantity.of(50000.0, Unit.RPM)  # present, supplied
+Quantity.of(0.5, Unit.OTHER, unit_label="mg/mL")  # open-ended unit retained
 Quantity.of(4.3, Unit.SECOND, provenance=ValueProvenance.CONVERTED)  # tagged
 ```

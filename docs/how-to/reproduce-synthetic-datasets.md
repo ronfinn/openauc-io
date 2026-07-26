@@ -22,10 +22,13 @@ assert a.to_dict() == b.to_dict()
 
 ```python
 import json
+
 Path("config.json").write_text(json.dumps(config.model_dump(mode="json"), indent=2))
 
 # later
-restored = SyntheticExperimentConfig.model_validate(json.loads(Path("config.json").read_text()))
+restored = SyntheticExperimentConfig.model_validate(
+    json.loads(Path("config.json").read_text())
+)
 assert generate_experiment(restored).to_dict() == a.to_dict()
 ```
 
@@ -57,10 +60,11 @@ generated data.
 
 ```python
 import numpy as np
+
 np.random.seed(1234)
 before = np.random.get_state()
 generate_experiment(config)
-assert np.array_equal(np.random.get_state()[1], before[1])   # untouched
+assert np.array_equal(np.random.get_state()[1], before[1])  # untouched
 ```
 
 ## With `noise_level=0`
@@ -72,7 +76,7 @@ functions of the configuration:
 x = generate_experiment(SyntheticExperimentConfig(seed=1, noise_level=0.0))
 y = generate_experiment(SyntheticExperimentConfig(seed=999, noise_level=0.0))
 assert x.to_dict()["observations"] == y.to_dict()["observations"]
-assert x.to_dict()["provenance"] != y.to_dict()["provenance"]   # seed recorded
+assert x.to_dict()["provenance"] != y.to_dict()["provenance"]  # seed recorded
 ```
 
 The seed is still recorded in provenance, honestly.

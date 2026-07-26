@@ -25,8 +25,8 @@ A `PRESENT` quantity must carry a finite value; every other status must carry
 ```python
 from openauc.models import Quantity, ValueStatus
 
-Quantity.unknown().status          # ValueStatus.UNKNOWN — not the same as MISSING
-Quantity.not_applicable().value    # None
+Quantity.unknown().status  # ValueStatus.UNKNOWN — not the same as MISSING
+Quantity.not_applicable().value  # None
 Quantity.of(20.0, Unit.DEGREE_CELSIUS).is_present  # True
 ```
 

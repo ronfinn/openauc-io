@@ -7,9 +7,9 @@ ordinary tools**, to preserve the canonical model exactly, and to be verifiable.
 ```python
 import openauc
 
-experiment = openauc.load("path/to/experiment")     # generic CSV/TSV
-experiment.export("experiment.aucx")                 # write
-restored = openauc.load("experiment.aucx")           # read back
+experiment = openauc.load("path/to/experiment")  # generic CSV/TSV
+experiment.export("experiment.aucx")  # write
+restored = openauc.load("experiment.aucx")  # read back
 assert restored.to_dict() == experiment.to_dict()
 ```
 
@@ -156,14 +156,14 @@ the message.
 Archive integrity is **separate** from structural and scientific validation:
 
 ```python
-info = openauc.inspect_aucx("experiment.aucx")   # verifies; raises on problems
+info = openauc.inspect_aucx("experiment.aucx")  # verifies; raises on problems
 info.aucx_format_version, info.radius_axis_mode, info.n_scans, info.export
 
 report = openauc.validate_aucx("experiment.aucx")  # never raises
 report.is_valid, report.issues
 
 restored = openauc.load("experiment.aucx")
-restored.validate_structure()   # a different question entirely
+restored.validate_structure()  # a different question entirely
 restored.validate()
 restored.assess_readiness()
 restored.summary_data()

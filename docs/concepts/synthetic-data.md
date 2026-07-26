@@ -113,8 +113,8 @@ impossible domains are rejected at construction with a clear message.
 ```python
 from openauc.synthetic import write_generic_long, write_generic_wide, write_aucx
 
-write_generic_long(experiment, "out/long")        # manifest.json + scans.csv
-write_generic_wide(experiment, "out/wide")        # shared-axis only
+write_generic_long(experiment, "out/long")  # manifest.json + scans.csv
+write_generic_wide(experiment, "out/wide")  # shared-axis only
 write_aucx(experiment, "out/experiment.aucx")
 
 restored = openauc.load("out/experiment.aucx")

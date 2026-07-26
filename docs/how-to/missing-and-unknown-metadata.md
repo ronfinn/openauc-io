@@ -20,9 +20,9 @@ model entirely.
 ```python
 from openauc.models import Quantity, ValueStatus
 
-Quantity.unknown().status          # ValueStatus.UNKNOWN — not MISSING
-Quantity.not_applicable().value    # None
-Quantity.of(20.0, Unit.DEGREE_CELSIUS).is_present   # True
+Quantity.unknown().status  # ValueStatus.UNKNOWN — not MISSING
+Quantity.not_applicable().value  # None
+Quantity.of(20.0, Unit.DEGREE_CELSIUS).is_present  # True
 ```
 
 A `PRESENT` quantity must carry a finite value; every other status must carry
@@ -61,8 +61,10 @@ Demonstrated:
 
 ```python
 from openauc.synthetic import (
-    SyntheticExperimentConfig, generate_experiment,
-    write_generic_long, write_aucx,
+    SyntheticExperimentConfig,
+    generate_experiment,
+    write_generic_long,
+    write_aucx,
 )
 
 sparse = generate_experiment(
@@ -73,7 +75,7 @@ from_aucx = openauc.load(write_aucx(sparse, "out/sparse.aucx"))
 
 original = {s.elapsed_time.status for s in sparse.scans}
 assert ValueStatus.UNKNOWN in original
-assert {s.elapsed_time.status for s in from_aucx.scans} == original   # exact
+assert {s.elapsed_time.status for s in from_aucx.scans} == original  # exact
 assert ValueStatus.UNKNOWN not in {s.elapsed_time.status for s in from_csv.scans}
 ```
 

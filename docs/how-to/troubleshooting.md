@@ -229,6 +229,7 @@ ax.figure.savefig("scans.png")
 
 ```python
 import matplotlib.pyplot as plt
+
 fig, ax = plt.subplots()
 plot_scans(experiment, ax=ax)
 plt.show()

@@ -35,8 +35,8 @@ Only the first three exist in `openauc`, and they live in different places:
 ## The two entry points
 
 ```python
-report = experiment.validate_structure()   # tiers A+B, ERROR and WARNING only
-report = experiment.validate()             # all four tiers, all severities
+report = experiment.validate_structure()  # tiers A+B, ERROR and WARNING only
+report = experiment.validate()  # all four tiers, all severities
 ```
 
 `validate_structure()` is unchanged in meaning: `report.is_valid` is `True` when
@@ -152,21 +152,21 @@ no scientific interpretation.
 ## Finding structure
 
 ```python
-issue.code          # stable identifier, e.g. "rotor_speed_absent"
-issue.severity      # ERROR | WARNING | INFO
-issue.tiers         # tiers this finding speaks to (never empty)
-issue.tier          # the primary (first) tier
-issue.blocks        # tiers this finding prevents
-issue.message       # what was found
-issue.observed      # what was actually there
-issue.expected      # the condition that would satisfy the check
-issue.remediation   # a concrete suggestion
-issue.component     # the model field concerned
-issue.location      # the single affected subject, when there is exactly one
-issue.scan_ids      # every affected scan, sorted
+issue.code  # stable identifier, e.g. "rotor_speed_absent"
+issue.severity  # ERROR | WARNING | INFO
+issue.tiers  # tiers this finding speaks to (never empty)
+issue.tier  # the primary (first) tier
+issue.blocks  # tiers this finding prevents
+issue.message  # what was found
+issue.observed  # what was actually there
+issue.expected  # the condition that would satisfy the check
+issue.remediation  # a concrete suggestion
+issue.component  # the model field concerned
+issue.location  # the single affected subject, when there is exactly one
+issue.scan_ids  # every affected scan, sorted
 issue.blocks_structural_validity
 issue.blocks_tier(tier)
-issue.describe()    # multi-line rendering with the detail above
+issue.describe()  # multi-line rendering with the detail above
 issue.to_dict()
 ```
 

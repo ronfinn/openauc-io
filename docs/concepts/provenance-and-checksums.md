@@ -10,10 +10,10 @@ representation, not an audit claim, and nothing in it is inferred.
 ```python
 p = experiment.provenance
 p.source_path, p.source_filename
-p.parser_name, p.parser_version      # e.g. 'generic-long', '0.1.0a1'
-p.imported_at                        # UTC timestamp
-p.sha256                             # digest of the primary data file
-p.source_checksums                   # one typed entry per source file
+p.parser_name, p.parser_version  # e.g. 'generic-long', '0.1.0a1'
+p.imported_at  # UTC timestamp
+p.sha256  # digest of the primary data file
+p.source_checksums  # one typed entry per source file
 p.warnings, p.assumptions
 ```
 
@@ -57,11 +57,11 @@ source**:
 
 ```python
 p = generated.provenance
-p.parser_name       # 'openauc.synthetic'
-p.source_path       # None — nothing was read from disk
-p.sha256            # None
-p.transformations   # ('generated scenario=moving-boundary',)
-p.assumptions       # the synthetic disclaimer, seed, noise level
+p.parser_name  # 'openauc.synthetic'
+p.source_path  # None — nothing was read from disk
+p.sha256  # None
+p.transformations  # ('generated scenario=moving-boundary',)
+p.assumptions  # the synthetic disclaimer, seed, noise level
 ```
 
 ## Archive provenance

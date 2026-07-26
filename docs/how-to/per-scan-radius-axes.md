@@ -12,8 +12,8 @@ which one is in use is an inspectable property rather than a guess.
 ```python
 from openauc.models import RadiusAxisMode
 
-experiment.observations.mode is RadiusAxisMode.SHARED     # one axis for all
-experiment.observations.mode is RadiusAxisMode.PER_SCAN   # each scan its own
+experiment.observations.mode is RadiusAxisMode.SHARED  # one axis for all
+experiment.observations.mode is RadiusAxisMode.PER_SCAN  # each scan its own
 ```
 
 ## How the mode is chosen on import
@@ -38,7 +38,7 @@ Values and order are exactly as stored.
 for scan_id, radius, signal in experiment.observations.iter_scan_vectors():
     print(scan_id, len(radius), radius[0], radius[-1])
 
-experiment.observations.points_per_scan()   # e.g. (300, 298, 300)
+experiment.observations.points_per_scan()  # e.g. (300, 298, 300)
 ```
 
 ## How per-scan data is stored
@@ -58,8 +58,9 @@ data:
 
 ```python
 from openauc.plotting import plot_scans
+
 ax = plot_scans(ragged_experiment)
-print([len(line.get_xdata()) for line in ax.lines])   # differing lengths
+print([len(line.get_xdata()) for line in ax.lines])  # differing lengths
 ```
 
 ## What refuses
@@ -93,7 +94,7 @@ A scan may carry no observations at all. That is representable **only** in
 per-scan mode:
 
 ```python
-experiment.observations.points_per_scan()   # (300, 0, 300)
+experiment.observations.points_per_scan()  # (300, 0, 300)
 ```
 
 It produces an `empty_scan` warning and does not invalidate the experiment.
