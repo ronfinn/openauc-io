@@ -3,7 +3,7 @@
 A manifest declares which data file to read, its format, experiment identity, and
 optional instrument/sample/default metadata. **JSON is canonical**; **YAML** is
 accepted as an authoring convenience. The machine-readable schema is
-[`schemas/generic-manifest-v1.schema.json`](../../schemas/generic-manifest-v1.schema.json),
+[`schemas/generic-manifest-v1.schema.json`](https://github.com/ronfinn/openauc-io/blob/main/schemas/generic-manifest-v1.schema.json),
 kept consistent with the Pydantic model by a test.
 
 ## Minimal example

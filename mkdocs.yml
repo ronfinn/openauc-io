@@ -1,0 +1,196 @@
+site_name: openauc-io
+site_description: >-
+  Import, validate, standardise, visualise and archive analytical
+  ultracentrifugation data.
+site_url: https://ronfinn.github.io/openauc-io/
+repo_url: https://github.com/ronfinn/openauc-io
+repo_name: ronfinn/openauc-io
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2026 Ron Finn — Apache License 2.0
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            filters: ["!^_"]
+            merge_init_into_class: true
+            heading_level: 3
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Anchor link to this section
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+nav:
+  - Home: index.md
+
+  - Getting started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - Five-minute quickstart: getting-started/quickstart.md
+      - Your first experiment: getting-started/first-experiment.md
+      - Choosing Python or the CLI: getting-started/python-or-cli.md
+
+  - Tutorials:
+      - tutorials/index.md
+      - Complete Python workflow: tutorials/python-workflow.md
+      - Complete CLI workflow: tutorials/cli-workflow.md
+      - Generate synthetic data: tutorials/generate-synthetic-data.md
+      - Load generic-long data: tutorials/load-generic-long.md
+      - Load generic-wide data: tutorials/load-generic-wide.md
+      - Validate an experiment: tutorials/validate-an-experiment.md
+      - Plot scans: tutorials/plot-scans.md
+      - Export and reload AUCX: tutorials/export-and-reload-aucx.md
+
+  - How-to guides:
+      - how-to/index.md
+      - Create a manifest: how-to/create-a-manifest.md
+      - Inspect an experiment: how-to/inspect-an-experiment.md
+      - Interpret validation findings: how-to/interpret-validation-findings.md
+      - Assess analysis readiness: how-to/assess-analysis-readiness.md
+      - Convert CSV/TSV to AUCX: how-to/convert-to-aucx.md
+      - Verify an AUCX archive: how-to/verify-an-aucx-archive.md
+      - Work with per-scan radius axes: how-to/per-scan-radius-axes.md
+      - Handle missing and unknown metadata: how-to/missing-and-unknown-metadata.md
+      - Reproduce synthetic datasets: how-to/reproduce-synthetic-datasets.md
+      - Troubleshoot common errors: how-to/troubleshooting.md
+      - Recipes: how-to/recipes.md
+
+  - Concepts:
+      - concepts/README.md
+      - Canonical data model: concepts/data-model.md
+      - Units: concepts/units.md
+      - Missing, unknown and not-applicable: concepts/missing-and-unknown-values.md
+      - Optical systems: concepts/optical-systems.md
+      - Validation tiers: concepts/validation-tiers.md
+      - Analysis readiness: concepts/analysis-readiness.md
+      - Plotting: concepts/plotting.md
+      - Synthetic data: concepts/synthetic-data.md
+      - Provenance and checksums: concepts/provenance-and-checksums.md
+      - Scientific boundaries: concepts/scientific-boundaries.md
+
+  - Formats:
+      - formats/README.md
+      - Generic delimited: formats/generic-delimited.md
+      - Manifest version 1: formats/manifest-v1.md
+      - Parser detection: formats/parser-detection.md
+      - AUCX version 1: formats/aucx.md
+
+  - CLI reference:
+      - cli/index.md
+      - openauc version: cli/version.md
+      - openauc formats: cli/formats.md
+      - openauc generate: cli/generate.md
+      - openauc inspect: cli/inspect.md
+      - openauc validate: cli/validate.md
+      - openauc convert: cli/convert.md
+      - Exit codes: cli/exit-codes.md
+
+  - Python API:
+      - api/index.md
+      - Top-level API: api/top-level.md
+      - Experiments and metadata: api/experiments.md
+      - Observations: api/observations.md
+      - Validation and readiness: api/validation.md
+      - Summaries: api/summaries.md
+      - Plotting: api/plotting.md
+      - Synthetic generation: api/synthetic.md
+      - Generic-delimited ingestion: api/ingestion.md
+      - AUCX archives: api/aucx.md
+      - Exceptions: api/exceptions.md
+
+  - Project:
+      - project/index.md
+      - Known limitations: project/limitations.md
+      - Roadmap: project/roadmap.md
+      - Architecture decisions:
+          - project/decisions.md
+          - ADR-0001 Package architecture: decisions/ADR-0001-python-package-architecture.md
+          - ADR-0002 Canonical data model: decisions/ADR-0002-canonical-data-model.md
+          - ADR-0003 AUCX container: decisions/ADR-0003-aucx-container-format.md
+          - ADR-0004 Parser registry: decisions/ADR-0004-parser-plugin-registry.md
+      - Contributing: project/contributing.md
+      - Security: project/security.md
+      - Changelog: project/changelog.md
+      - Licence and citation: project/licence.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/ronfinn/openauc-io
+      name: openauc-io on GitHub

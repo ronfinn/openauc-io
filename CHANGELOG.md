@@ -107,8 +107,19 @@ release, no tag.
   solutions, not simulations of sedimentation**, and carry no physical
   parameters; every generated experiment says so in its metadata and provenance.
 
+- Documentation site (MkDocs Material) with a detailed user manual: getting
+  started, eight tutorials, eleven how-to guides including troubleshooting and
+  twelve recipes, ten concept pages (adding provenance/checksums and scientific
+  boundaries), four format specifications, a per-command CLI reference with
+  documented exit codes, and a curated mkdocstrings API reference. Adds a
+  `docs` dependency group, `mkdocs.yml`, a strict-build CI job and a GitHub
+  Pages deployment workflow. Resolves open question Q6 (documentation tooling).
+
 ### Changed
 
+- README slimmed to a concise overview; long-form explanation now lives in the
+  documentation site. `docs/api.md` and `docs/cli.md` are superseded by the
+  `docs/api/` and `docs/cli/` sections.
 - **Version is now `0.1.0a1`** (was `0.1.0.dev0`), in the package and
   `CITATION.cff`.
 - Imported experiments now record source checksums, so `source_checksum_absent`
