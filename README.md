@@ -23,6 +23,16 @@ and archiving analytical ultracentrifugation data.**
   >
 </p>
 
+## Current capabilities
+
+- Generic long- and wide-format CSV/TSV ingestion
+- Typed canonical AUC experiment model
+- Structural validation and analysis-readiness reporting
+- Shared and per-scan radial-axis support
+- Scan plotting without interpolation or regridding
+- Checksum-verified AUCX archives
+- Deterministic illustrative synthetic data generation
+- Python API and command-line interface
 ## Installation
 
 Not on PyPI. From a clone:
