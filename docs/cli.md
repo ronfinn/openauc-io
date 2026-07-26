@@ -65,6 +65,25 @@ openauc convert path/to/experiment experiment.aucx --json
 Model data is preserved exactly: nothing is interpolated, resampled, sorted or
 unit-converted. An existing output is refused unless `--overwrite` is supplied.
 
+### `openauc generate OUTPUT`
+
+Writes an **illustrative synthetic dataset** for testing and demonstration.
+
+```bash
+openauc generate out/demo --scenario moving-boundary --scans 20 --points 300 --seed 42
+openauc generate demo.aucx --format aucx --scenario per-scan-radius
+openauc generate out/demo --overwrite --noise 0.01 --json
+```
+
+Options: `--scenario`, `--scans`, `--points`, `--seed`, `--noise`, `--format`
+(`generic-long` | `generic-wide` | `aucx`), `--overwrite`, `--json`.
+
+The output is invented data. It is **not a physically validated simulation** of
+an analytical ultracentrifugation experiment, not a Lamm-equation solution, and
+carries no physical parameters. The same seed always reproduces the same
+dataset. `--format generic-wide` fails for per-scan-axis scenarios rather than
+resampling. See [synthetic data](concepts/synthetic-data.md).
+
 ## Exit codes
 
 | Code | Meaning |
@@ -88,6 +107,7 @@ the code above — **never a traceback**.
 ## What the CLI does not do
 
 No sedimentation-velocity or equilibrium analysis, no fitting, no quality
-scoring, no plotting subcommand, and no vendor format conversion. Exit code `0`
+scoring, no plotting subcommand, and no vendor format conversion. `generate`
+produces illustrative data only and simulates nothing. Exit code `0`
 from `validate` means the data is structurally consistent; it is never a
 statement that the experiment is scientifically sound.

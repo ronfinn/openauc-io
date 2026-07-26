@@ -72,8 +72,9 @@ def test_subpackage_facades_resolve() -> None:
     import openauc.formats as formats
     import openauc.models as models
     import openauc.plotting as plotting
+    import openauc.synthetic as synthetic
 
-    for module in (models, formats, plotting):
+    for module in (models, formats, plotting, synthetic):
         missing = [name for name in module.__all__ if not hasattr(module, name)]
         assert missing == [], (module.__name__, missing)
         assert len(set(module.__all__)) == len(module.__all__), module.__name__
@@ -105,6 +106,7 @@ EXAMPLE_SCRIPTS = [
     "04_plot_scans.py",
     "05_aucx_roundtrip.py",
     "06_cli_usage.py",
+    "generate_synthetic_experiment.py",
 ]
 
 
@@ -160,6 +162,7 @@ def test_documented_files_exist() -> None:
         "docs/concepts/validation-tiers.md",
         "docs/concepts/analysis-readiness.md",
         "docs/concepts/plotting.md",
+        "docs/concepts/synthetic-data.md",
         "docs/formats/generic-delimited.md",
         "docs/formats/manifest-v1.md",
         "docs/formats/parser-detection.md",

@@ -93,6 +93,20 @@ release, no tag.
   and release-readiness tests covering the public surface, examples, packaging
   metadata and repository hygiene.
 
+- Synthetic data generator (`openauc.synthetic`): `generate_experiment` builds
+  reproducible, repository-safe AUC-*like* datasets from a frozen
+  `SyntheticExperimentConfig`, in eight scenarios (`moving-boundary`,
+  `equilibrium-profile`, `static-profile`, `per-scan-radius`, `sparse-metadata`,
+  `mixed-optics`, `empty-scans`, `invalid-structure`). Writers
+  `write_generic_long`, `write_generic_wide` and `write_aucx` reuse the existing
+  manifest and AUCX infrastructure; an `openauc generate` CLI command wraps them.
+  Randomness comes from a local `numpy.random.Generator`, so NumPy's global
+  state is never touched. Adds `SyntheticWriteError`.
+
+  Generated curves are **illustrative closed-form shapes, not Lamm-equation
+  solutions, not simulations of sedimentation**, and carry no physical
+  parameters; every generated experiment says so in its metadata and provenance.
+
 ### Changed
 
 - **Version is now `0.1.0a1`** (was `0.1.0.dev0`), in the package and

@@ -7,6 +7,7 @@ Commands mirror the Python API and add nothing scientific:
 * ``inspect``  — load an input and print its factual structural summary
 * ``validate`` — report archival and structural findings, optionally readiness
 * ``convert``  — write a generic delimited experiment, or an archive, to AUCX
+* ``generate`` — write an illustrative synthetic dataset (never a simulation)
 
 Every command accepts ``--json`` where structured output is useful, so the CLI
 composes with other tools.
@@ -25,10 +26,15 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import typer
+from pydantic import ValidationError
 
 from openauc import __version__
 from openauc.exceptions import ArchiveError, OpenAUCError
 from openauc.formats.aucx import AUCX_SUFFIX
+
+SYNTHETIC_DISCLAIMER = (
+    "illustrative synthetic data; not a physically validated simulation"
+)
 
 __all__ = ["ExitCode", "app", "main"]
 
@@ -260,6 +266,120 @@ def convert(
         )
     else:
         typer.echo(f"wrote {written} ({written.stat().st_size} bytes)")
+
+
+@app.command()
+def generate(
+    output_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Destination: a directory for CSV output, or an .aucx file."
+        ),
+    ],
+    scenario: Annotated[
+        str, typer.Option("--scenario", help="Which synthetic scenario to generate.")
+    ] = "moving-boundary",
+    scans: Annotated[int, typer.Option("--scans", help="Number of scans.")] = 10,
+    points: Annotated[
+        int, typer.Option("--points", help="Radial points per scan.")
+    ] = 100,
+    seed: Annotated[
+        int,
+        typer.Option(
+            "--seed",
+            help="Random seed; the same seed always produces the same dataset.",
+        ),
+    ] = 0,
+    noise: Annotated[
+        float, typer.Option("--noise", help="Deterministic noise level (0 disables).")
+    ] = 0.0,
+    output_format: Annotated[
+        str,
+        typer.Option(
+            "--format", help="generic-long | generic-wide | aucx.", show_default=True
+        ),
+    ] = "generic-long",
+    overwrite: Annotated[
+        bool, typer.Option("--overwrite", help="Replace existing output.")
+    ] = False,
+    as_json: JsonOption = False,
+) -> None:
+    """Generate an ILLUSTRATIVE SYNTHETIC dataset for testing and demonstration.
+
+    The output is invented data. It is NOT a physically validated simulation of
+    an analytical ultracentrifugation experiment, not a Lamm-equation solution,
+    and carries no sedimentation coefficient, molar mass or any other physical
+    parameter. Nothing scientific may be inferred from it.
+
+    Scenarios: moving-boundary, equilibrium-profile, static-profile,
+    per-scan-radius, sparse-metadata, mixed-optics, empty-scans,
+    invalid-structure.
+    """
+    from openauc.synthetic import (
+        Scenario,
+        SyntheticExperimentConfig,
+        SyntheticWriteError,
+        generate_experiment,
+        write_aucx,
+        write_generic_long,
+        write_generic_wide,
+    )
+
+    try:
+        chosen = Scenario(scenario)
+    except ValueError:
+        _fail(
+            f"unknown scenario {scenario!r}; choose one of "
+            f"{[s.value for s in Scenario]}",
+            ExitCode.INPUT_ERROR,
+        )
+    writers = {
+        "generic-long": write_generic_long,
+        "generic-wide": write_generic_wide,
+        "aucx": write_aucx,
+    }
+    if output_format not in writers:
+        _fail(
+            f"unknown format {output_format!r}; choose one of {sorted(writers)}",
+            ExitCode.INPUT_ERROR,
+        )
+
+    try:
+        config = SyntheticExperimentConfig(
+            scenario=chosen,
+            n_scans=scans,
+            n_points=points,
+            seed=seed,
+            noise_level=noise,
+        )
+    except ValidationError as exc:
+        _fail(f"invalid configuration: {exc}", ExitCode.INPUT_ERROR)
+
+    experiment = generate_experiment(config)
+    try:
+        written = writers[output_format](experiment, output_path, overwrite=overwrite)
+    except (SyntheticWriteError, ArchiveError) as exc:
+        code = (
+            ExitCode.OUTPUT_EXISTS if "overwrite" in str(exc) else ExitCode.INPUT_ERROR
+        )
+        _fail(str(exc), code)
+
+    if as_json:
+        _echo_json(
+            {
+                "output": str(written),
+                "scenario": chosen.value,
+                "format": output_format,
+                "seed": seed,
+                "n_scans": len(experiment.scans),
+                "synthetic": True,
+                "note": SYNTHETIC_DISCLAIMER,
+            }
+        )
+    else:
+        typer.echo(f"wrote {written}")
+        typer.echo(f"  scenario: {chosen.value}  seed: {seed}  scans: {scans}")
+        typer.echo(f"  note: {SYNTHETIC_DISCLAIMER}")
 
 
 def main() -> None:
