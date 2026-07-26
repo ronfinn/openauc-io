@@ -116,7 +116,7 @@ suitability is permanently reported as `NOT_ASSESSED`.
 See [validation tiers](validation-tiers.md), [analysis
 readiness](analysis-readiness.md), the source modules
 `openauc.models.validation`, `openauc.models.checks`, `openauc.models.readiness`
-and `openauc.models.summary`, and the [API reference](../api.md).
+and `openauc.models.summary`, and the [API reference](../api/index.md).
 
 ## Serialisation
 

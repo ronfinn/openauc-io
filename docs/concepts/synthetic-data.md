@@ -152,6 +152,6 @@ openauc generate demo.aucx --format aucx --scenario per-scan-radius
 openauc generate out/demo --overwrite --noise 0.01
 ```
 
-See [the CLI reference](../cli.md). The command's help text states prominently
+See [the CLI reference](../cli/generate.md). The command's help text states prominently
 that its output is illustrative synthetic data and not a physically validated
 simulation.

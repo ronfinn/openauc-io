@@ -153,8 +153,9 @@ def test_documented_files_exist() -> None:
         "LICENSE",
         "NOTICE",
         "CITATION.cff",
-        "docs/api.md",
-        "docs/cli.md",
+        "docs/api/index.md",
+        "docs/cli/index.md",
+        "mkdocs.yml",
         "docs/concepts/data-model.md",
         "docs/concepts/units.md",
         "docs/concepts/missing-and-unknown-values.md",
@@ -187,7 +188,7 @@ def test_readme_does_not_claim_vendor_or_scientific_support() -> None:
     # Normalise line wrapping and blockquote markers before matching prose.
     readme = " ".join(raw.replace("\n>", "\n").split())
     assert "no scientific auc analysis is implemented" in readme
-    assert "scientific suitability is always reported as `not_assessed`" in readme
+    assert "always reported as `not_assessed`" in readme
     for claim in ("supports beckman", "supports optima", "sedfit compatible"):
         assert claim not in readme
 

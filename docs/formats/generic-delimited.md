@@ -92,7 +92,7 @@ consistency — never by arbitrary guessing.
 
 ## Provenance
 
-Each load attaches an [`ImportProvenance`](../api.md) record: parser id and
+Each load attaches an [`ImportProvenance`](../api/experiments.md) record: parser id and
 version, source and manifest/data paths, an import timestamp, warnings and
 assumptions. **Checksums are not computed in Phase 3** — SHA-256 remains deferred
 to Phase 6 (ADR-0003), so `sha256` is `None`.
