@@ -1,19 +1,19 @@
 # openauc-io
 
-Open-source Python library for importing, validating, standardising, visualising
-and archiving analytical ultracentrifugation (AUC) data.
+**Open-source Python tools for ingesting, validating, plotting, generating,
+and archiving analytical ultracentrifugation data.**
 
-**📖 Full documentation: <https://ronfinn.github.io/openauc-io/>**
+[Documentation](https://ronfinn.github.io/openauc-io/) ·
+[Quickstart](https://ronfinn.github.io/openauc-io/getting-started/quickstart/) ·
+[CLI guide](https://ronfinn.github.io/openauc-io/cli/) ·
+[Report a bug](https://github.com/ronfinn/openauc-io/issues/new/choose) ·
+[Ask a question](https://github.com/ronfinn/openauc-io/discussions)
 
-> **Status: pre-alpha (`0.1.0a1`), not published.** APIs may change without
-> notice. Implemented: the canonical in-memory data model, generic CSV/TSV
-> ingestion, tiered structural validation, analysis-readiness reporting,
-> structured summaries, basic scan plotting, the AUCX archival container,
-> deterministic synthetic data generation, and a command-line interface.
->
-> **No scientific AUC analysis is implemented** — no sedimentation-velocity or
-> equilibrium analysis, no quality control, no unit conversion — and none is
-> planned. Vendor and instrument formats are not supported.
+[![CI](https://github.com/ronfinn/openauc-io/actions/workflows/ci.yml/badge.svg)](https://github.com/ronfinn/openauc-io/actions/workflows/ci.yml)
+[![Documentation](https://github.com/ronfinn/openauc-io/actions/workflows/docs.yml/badge.svg)](https://github.com/ronfinn/openauc-io/actions/workflows/docs.yml)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.0a1-orange)](CHANGELOG.md)
 
 ## Installation
 
