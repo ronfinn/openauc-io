@@ -35,10 +35,10 @@ and archiving analytical ultracentrifugation data.**
 - Python API and command-line interface
 
 > [!IMPORTANT]
-> openauc-io does not currently perform sedimentation fitting,
-> molecular-weight estimation, meniscus detection, convection assessment,
-> scientific quality control, or physically validated Lamm-equation
-> simulation.
+> No scientific AUC analysis is implemented. openauc-io does not currently
+> perform sedimentation fitting, molecular-weight estimation, meniscus
+> detection, convection assessment, scientific quality control, or physically
+> validated Lamm-equation simulation.
 
 ## Installation
 
