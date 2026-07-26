@@ -15,6 +15,14 @@ and archiving analytical ultracentrifugation data.**
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0a1-orange)](CHANGELOG.md)
 
+<p align="center">
+  <img
+    src="docs/assets/openauc-social-preview.jpg"
+    alt="openauc-io — open analytical ultracentrifugation data workflows"
+    width="100%"
+  >
+</p>
+
 ## Installation
 
 Not on PyPI. From a clone:
