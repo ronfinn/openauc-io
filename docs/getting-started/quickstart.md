@@ -96,7 +96,7 @@ import openauc
 from openauc.synthetic import SyntheticExperimentConfig, generate_experiment
 from openauc.plotting import plot_scans
 
-config = SyntheticExperimentConfig(      # (1)!
+config = SyntheticExperimentConfig(  # (1)!
     scenario="moving-boundary",
     n_scans=20,
     n_points=300,
@@ -105,15 +105,15 @@ config = SyntheticExperimentConfig(      # (1)!
 
 experiment = generate_experiment(config)  # (2)!
 
-print(experiment.summary())               # (3)!
+print(experiment.summary())  # (3)!
 
-report = experiment.validate()            # (4)!
+report = experiment.validate()  # (4)!
 readiness = experiment.assess_readiness()  # (5)!
 
-ax = plot_scans(experiment)               # (6)!
+ax = plot_scans(experiment)  # (6)!
 ax.figure.savefig("synthetic-scans.png")  # (7)!
 
-experiment.export("synthetic.aucx")       # (8)!
+experiment.export("synthetic.aucx")  # (8)!
 restored = openauc.load("synthetic.aucx")  # (9)!
 assert restored.to_dict() == experiment.to_dict()  # (10)!
 ```

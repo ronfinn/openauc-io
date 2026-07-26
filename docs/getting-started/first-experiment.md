@@ -88,8 +88,8 @@ uv run openauc inspect my-experiment
 
 ```python
 report = experiment.validate_structure()
-print(report)                    # 'structural validation: OK (no issues)'
-print(report.is_valid)           # True
+print(report)  # 'structural validation: OK (no issues)'
+print(report.is_valid)  # True
 ```
 
 `is_valid` being `True` means the scans and observations correspond

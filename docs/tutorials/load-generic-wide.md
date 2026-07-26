@@ -55,7 +55,7 @@ Each entry in `columns.scans` maps one data column to one scan and may carry
 import openauc
 
 experiment = openauc.load("wide-example")
-print(experiment.observations.mode)     # RadiusAxisMode.SHARED
+print(experiment.observations.mode)  # RadiusAxisMode.SHARED
 print(experiment.validate_structure())  # structural validation: OK (no issues)
 ```
 
@@ -73,7 +73,9 @@ interpolating or resampling measured data.
 
 ```python
 from openauc.synthetic import (
-    SyntheticExperimentConfig, generate_experiment, write_generic_wide,
+    SyntheticExperimentConfig,
+    generate_experiment,
+    write_generic_wide,
 )
 
 ragged = generate_experiment(

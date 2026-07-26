@@ -72,7 +72,7 @@ record repeats the first identifier. **No construction invariant is bypassed.**
 ```python
 a = generate_experiment(config)
 b = generate_experiment(config)
-assert a.to_dict() == b.to_dict()      # identical
+assert a.to_dict() == b.to_dict()  # identical
 ```
 
 Noise is drawn from `numpy.random.default_rng(config.seed)`. **NumPy's global
@@ -117,8 +117,8 @@ SyntheticExperimentConfig(radius_min=7.0, radius_max=6.0)
 ```python
 from openauc.synthetic import write_generic_long, write_generic_wide, write_aucx
 
-write_generic_long(experiment, "out/long")     # manifest.json + scans.csv
-write_generic_wide(experiment, "out/wide")     # shared-axis only
+write_generic_long(experiment, "out/long")  # manifest.json + scans.csv
+write_generic_wide(experiment, "out/wide")  # shared-axis only
 write_aucx(experiment, "out/demo.aucx")
 ```
 

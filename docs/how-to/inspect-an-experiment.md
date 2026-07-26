@@ -18,8 +18,8 @@ uv run openauc inspect examples/data/demo_experiment --json
 import openauc
 
 experiment = openauc.load("examples/data/demo_experiment")
-print(experiment.summary())            # human-readable text
-summary = experiment.summary_data()    # structured, frozen, JSON-friendly
+print(experiment.summary())  # human-readable text
+summary = experiment.summary_data()  # structured, frozen, JSON-friendly
 ```
 
 ## What the summary carries
@@ -38,12 +38,12 @@ summary = experiment.summary_data()    # structured, frozen, JSON-friendly
 ## Ranges
 
 ```python
-summary.radius.minimum        # float | None
+summary.radius.minimum  # float | None
 summary.radius.maximum
-summary.radius.unit           # declared unit, never converted
+summary.radius.unit  # declared unit, never converted
 summary.radius.n_present, summary.radius.n_absent
-summary.radius.render()       # '5.9 to 7.2 cm (observed)' or 'unknown'
-summary.radius.is_observed    # bool
+summary.radius.render()  # '5.9 to 7.2 cm (observed)' or 'unknown'
+summary.radius.is_observed  # bool
 ```
 
 ## Counting absence honestly
@@ -51,12 +51,18 @@ summary.radius.is_observed    # bool
 ```python
 for entry in summary.metadata_presence:
     print(
-        entry.component, entry.field,
-        "present", entry.present,
-        "missing", entry.missing,
-        "unknown", entry.unknown,
-        "not_applicable", entry.not_applicable,
-        "absent", entry.absent,
+        entry.component,
+        entry.field,
+        "present",
+        entry.present,
+        "missing",
+        entry.missing,
+        "unknown",
+        entry.unknown,
+        "not_applicable",
+        entry.not_applicable,
+        "absent",
+        entry.absent,
     )
 ```
 
@@ -67,6 +73,7 @@ value.
 
 ```python
 import json
+
 print(json.dumps(summary.to_dict(), indent=2))
 ```
 

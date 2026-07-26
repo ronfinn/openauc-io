@@ -14,8 +14,9 @@ uv run openauc generate demo.aucx --format aucx \
 from openauc.synthetic import SyntheticExperimentConfig, generate_experiment
 
 experiment = generate_experiment(
-    SyntheticExperimentConfig(scenario="moving-boundary", n_scans=20,
-                              n_points=300, seed=42)
+    SyntheticExperimentConfig(
+        scenario="moving-boundary", n_scans=20, n_points=300, seed=42
+    )
 )
 experiment.export("demo.aucx")
 ```
@@ -28,7 +29,8 @@ uv run openauc generate work/demo --format generic-long --scenario static-profil
 
 ```python
 from openauc.synthetic import write_generic_long
-write_generic_long(experiment, "work/demo")     # manifest.json + scans.csv
+
+write_generic_long(experiment, "work/demo")  # manifest.json + scans.csv
 ```
 
 ## 3. Inspect a CSV experiment
@@ -79,7 +81,7 @@ for directory in sorted(Path("data").iterdir()):
     experiment = openauc.load(directory)
     ax = plot_scans(experiment, title=experiment.metadata.experiment_id)
     ax.figure.savefig(f"figures/{directory.name}.png", dpi=150, bbox_inches="tight")
-    ax.figure.clf()      # release the figure between iterations
+    ax.figure.clf()  # release the figure between iterations
 ```
 
 No display is required; pyplot is never used.
@@ -93,6 +95,7 @@ jq '.structural.counts' report.json
 
 ```python
 import json
+
 print(json.dumps(experiment.validate().to_dict(), indent=2))
 ```
 
@@ -152,8 +155,14 @@ for key in ("metadata", "instrument", "samples", "scans", "observations"):
 
 ```python
 from openauc.models import (
-    AUCExperiment, ExperimentMetadata, ExperimentType, Observations,
-    OpticalSystem, Quantity, ScanMetadata, Unit,
+    AUCExperiment,
+    ExperimentMetadata,
+    ExperimentType,
+    Observations,
+    OpticalSystem,
+    Quantity,
+    ScanMetadata,
+    Unit,
 )
 
 experiment = AUCExperiment(
@@ -163,14 +172,16 @@ experiment = AUCExperiment(
     ),
     scans=(
         ScanMetadata(
-            scan_id="scan_001", index=0,
+            scan_id="scan_001",
+            index=0,
             elapsed_time=Quantity.of(0.0, Unit.SECOND),
             optical_system=OpticalSystem.ABSORBANCE,
             rotor_speed=Quantity.of(45000.0, Unit.RPM),
-            temperature=Quantity.unknown(),      # explicitly unknown
+            temperature=Quantity.unknown(),  # explicitly unknown
         ),
         ScanMetadata(
-            scan_id="scan_002", index=1,
+            scan_id="scan_002",
+            index=1,
             elapsed_time=Quantity.of(600.0, Unit.SECOND),
             optical_system=OpticalSystem.ABSORBANCE,
             rotor_speed=Quantity.of(45000.0, Unit.RPM),
@@ -194,15 +205,15 @@ experiment.export("hand-built.aucx")
 from openauc.models import Observations, RadiusAxisMode, Unit
 
 observations = Observations.from_per_scan(
-    radii=[[6.00, 6.02, 6.04], [6.00, 6.02]],     # differing lengths
+    radii=[[6.00, 6.02, 6.04], [6.00, 6.02]],  # differing lengths
     signals=[[0.1, 0.2, 0.3], [0.4, 0.5]],
     scan_ids=["a", "b"],
     signal_unit=Unit.FRINGE,
 )
 assert observations.mode is RadiusAxisMode.PER_SCAN
-observations.points_per_scan()          # (3, 2)
+observations.points_per_scan()  # (3, 2)
 
-radius, signal = observations.scan_vectors("b")   # padding removed
+radius, signal = observations.scan_vectors("b")  # padding removed
 for scan_id, radius, signal in observations.iter_scan_vectors():
     print(scan_id, radius.tolist())
 ```

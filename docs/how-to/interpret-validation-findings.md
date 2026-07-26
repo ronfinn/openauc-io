@@ -7,17 +7,17 @@ Full rationale per rule: [Validation tiers](../concepts/validation-tiers.md).
 ## Anatomy of a finding
 
 ```python
-issue.code        # stable identifier, e.g. 'rotor_speed_absent'
-issue.severity    # ERROR | WARNING | INFO
-issue.tiers       # tier(s) it speaks to
-issue.blocks      # tier(s) it prevents — may be empty
-issue.message     # what was found
-issue.observed    # what was actually there
-issue.expected    # what would have satisfied the check
-issue.remediation # a concrete suggestion
-issue.component   # the model field concerned
-issue.location    # the single affected subject, when there is exactly one
-issue.scan_ids    # every affected scan, sorted
+issue.code  # stable identifier, e.g. 'rotor_speed_absent'
+issue.severity  # ERROR | WARNING | INFO
+issue.tiers  # tier(s) it speaks to
+issue.blocks  # tier(s) it prevents — may be empty
+issue.message  # what was found
+issue.observed  # what was actually there
+issue.expected  # what would have satisfied the check
+issue.remediation  # a concrete suggestion
+issue.component  # the model field concerned
+issue.location  # the single affected subject, when there is exactly one
+issue.scan_ids  # every affected scan, sorted
 issue.describe()  # all of the above, rendered
 ```
 

@@ -22,9 +22,9 @@ to have examined the experiment.
 ```python
 import openauc
 
-info = openauc.inspect_aucx("demo.aucx")   # raises on any problem
-info.checksum_verified                      # True
-info.aucx_format_version                    # '1.0'
+info = openauc.inspect_aucx("demo.aucx")  # raises on any problem
+info.checksum_verified  # True
+info.aucx_format_version  # '1.0'
 info.n_scans, info.n_points
 info.members
 info.export.exported_at, info.export.software_version
