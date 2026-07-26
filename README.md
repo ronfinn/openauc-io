@@ -33,6 +33,13 @@ and archiving analytical ultracentrifugation data.**
 - Checksum-verified AUCX archives
 - Deterministic illustrative synthetic data generation
 - Python API and command-line interface
+
+> [!IMPORTANT]
+> openauc-io does not currently perform sedimentation fitting,
+> molecular-weight estimation, meniscus detection, convection assessment,
+> scientific quality control, or physically validated Lamm-equation
+> simulation.
+
 ## Installation
 
 Not on PyPI. From a clone:
