@@ -3,11 +3,15 @@
 The procedure for cutting a release of openauc-io. It is written down so a
 release is a repeatable act rather than a remembered one.
 
-!!! note "Nothing has been released yet"
+!!! note "Status as of Phase 9 — nothing has been released yet"
 
     `0.1.0a1` is prepared but **unpublished**: no PyPI upload, no GitHub
     release, no tag. The machinery below is in place and exercised in dry-run
     form; running it to completion is a separate, deliberate decision.
+
+    This note records a point in time, not a permanent property of the project.
+    Update it when a release is made — the "After the release" steps below say
+    so, and no test pins it.
 
 ## What is automated and what is not
 
@@ -70,10 +74,18 @@ Only once every step above passes:
 
 ## After the release
 
-1. Open the next `## [Unreleased]` section in `CHANGELOG.md`.
-2. Record the release in `docs/project/roadmap.md` and the development log.
-3. Bump the version in `src/openauc/__init__.py` and `CITATION.cff` when work on
+1. Replace `- unreleased` in the `CHANGELOG.md` section heading with the release
+   date, and open the next `## [Unreleased]` section.
+2. Update the status note at the top of this page, and the version line on the
+   [project index](index.md), so neither still says the version is unpublished.
+3. Record the release in `docs/project/roadmap.md` and the development log.
+4. Bump the version in `src/openauc/__init__.py` and `CITATION.cff` when work on
    the next version begins.
+
+None of these are enforced by tests, deliberately: the tests pin what the
+*machinery* may do — build, verify, never publish or tag — not which point in
+the release cycle the repository currently occupies. A clone that has fetched
+`v0.1.0a1` must still pass the whole suite.
 
 ## Next step
 

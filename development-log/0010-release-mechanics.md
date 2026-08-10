@@ -70,9 +70,20 @@ step; it declares `permissions: contents: read` and requests no `id-token`. A
 test asserts each of those absences by name, and a second test asserts that *no*
 workflow in the repository publishes anywhere.
 
-It triggers on `workflow_dispatch` and on pull requests that touch the version,
-the packaging metadata or the workflow itself — the changes that can break a
-build — rather than on every push, which would duplicate CI.
+It triggers on `workflow_dispatch` and on pull requests touching any input the
+run depends on — rather than on every push, which would duplicate CI. The path
+set is the version, `pyproject.toml`, `CITATION.cff`, **both scripts the
+workflow executes**, **`uv.lock`** and the workflow file.
+
+`uv.lock` is included on review: `uv sync --all-groups` resolves from it, so a
+lock change alters the very environment the build, the strict docs build and the
+clean-environment smoke test run in. A dependency bump that breaks the build
+would otherwise reach `main` with the dry run never having run.
+
+The script paths are not merely listed and hoped for: a test extracts every
+`scripts/*.py` path from the workflow's own commands and asserts each one is a
+trigger path, so adding a step that runs a new script and forgetting its trigger
+fails the suite. Another test asserts every trigger path exists.
 
 ## 7. Documentation
 
@@ -84,14 +95,44 @@ index, the roadmap, both contributing pages and the site navigation.
 
 ## 8. Tests
 
-17 new tests in `tests/unit/test_release_mechanics.py`: the coverage gate is
+35 tests in `tests/unit/test_release_mechanics.py`: the coverage gate is
 configured and meaningful; coverage is measured on every run; both scripts exist
 and compile; the check script names every gate; no script contains an upload or
-release command; `verify_artifacts.py` *fails* on a mismatched dist and passes on
-a real one; the workflow exists, is read-only, contains none of seven named
-publishing mechanisms, and does build, check, verify and smoke-test; no workflow
-anywhere publishes; the checklist exists, is navigable and claims no release; the
-changelog still marks the alpha unreleased; and **no `v*` tag exists**.
+release command, writes to git, or reaches the network; `verify_artifacts.py`
+*fails* on a mismatched dist and passes on a real one, and reads `GITHUB_REF`
+rather than shelling out to git; the workflow exists, is read-only, contains none
+of seven named publishing mechanisms, and does build, check, verify and
+smoke-test; its triggers cover every script it runs, the build inputs and the
+lock file, and every trigger path exists; no workflow anywhere publishes; the
+checklist exists, is navigable and keeps publishing manual; and the changelog
+documents the declared version.
+
+### Temporary state is not a permanent invariant
+
+The first draft asserted that no `v*` tag existed in the repository. That is
+true today and false forever after the first release: a normal clone that has
+fetched tags would have failed the suite. It has been replaced by nine
+assertions over the *machinery* — no workflow and no script contains `git tag`,
+`git push --tags`, `git push --follow-tags`, `gh release create` or any of four
+tag-creating actions, and neither script commits, pushes or opens a network
+connection. That is the actual Phase 9 boundary: the automation cannot
+manufacture a release, whether or not one has happened.
+
+Two neighbours had the same defect and were corrected with it:
+
+- the changelog test required the literal heading `## [0.1.0a1] - unreleased`,
+  which the checklist itself instructs the maintainer to replace with a date. It
+  now requires a section for the declared version whose heading is *either*
+  `unreleased` or an ISO date.
+- the checklist test required the page to contain the word "unpublished" and its
+  exact status sentence. It now asserts the durable claim — that tagging, the
+  GitHub release and the PyPI upload are documented as manual, and that the page
+  never claims the workflow publishes.
+
+The truthful statement that nothing has been released as of Phase 9 is kept
+where it belongs: in the prose of the checklist and the project index, marked as
+a point in time, with a post-release step that says to update it and no test
+pinning it in place.
 
 Four existing paths were added to `test_documented_files_exist`.
 

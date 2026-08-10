@@ -9,10 +9,17 @@ name: Release dry run
 on:
   workflow_dispatch:
   pull_request:
+    # Every input this workflow depends on: the version and packaging metadata,
+    # the scripts it executes, the lock file that determines the environment it
+    # builds and smoke-tests in, and the workflow itself. A test pins this set
+    # against the commands actually run below.
     paths:
       - "pyproject.toml"
+      - "uv.lock"
       - "src/openauc/__init__.py"
       - "CITATION.cff"
+      - "scripts/release_check.py"
+      - "scripts/verify_artifacts.py"
       - ".github/workflows/release.yml"
 
 permissions:

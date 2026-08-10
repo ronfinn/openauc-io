@@ -123,8 +123,10 @@ release, no tag.
   a tag is present — that the tag is `v<version>`; a **Release dry run**
   workflow that builds, `twine check`s, verifies and smoke-tests the wheel in a
   clean environment while holding read-only permissions and containing no
-  upload step; a written [release checklist][release-checklist]; and tests that
-  pin all of it. **Still nothing published, tagged or released.**
+  upload step, and whose pull-request triggers cover every script it runs, the
+  packaging metadata and `uv.lock`; a written [release checklist][release-checklist];
+  and tests that pin all of it — including that no workflow or script can create
+  or push a release tag. **Still nothing published, tagged or released.**
 
 ### Changed
 
