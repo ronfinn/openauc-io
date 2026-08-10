@@ -103,3 +103,11 @@ markers = [
 [tool.coverage.run]
 source = ["openauc"]
 branch = true
+
+# The gate is deliberately set below the measured figure at 0.1.0a1 (96%). It
+# exists to catch a collapse in coverage, not to force every new line to be
+# covered before it can be merged; raising it is a separate, deliberate act.
+[tool.coverage.report]
+fail_under = 93
+precision = 1
+show_missing = true

@@ -24,8 +24,17 @@ before opening a pull request:
 uv run ruff check .      # lint
 uv run ruff format .     # format (use --check to verify only)
 uv run mypy              # static type checking (strict)
-uv run pytest            # tests with coverage
+uv run pytest            # tests with coverage (fails below the coverage floor)
 ```
+
+Or run every gate — lint, format, types, tests and the strict documentation
+build — in one command:
+
+```bash
+uv run python scripts/release_check.py
+```
+
+The release procedure itself is in `docs/project/release-checklist.md`.
 
 ## Project conventions
 

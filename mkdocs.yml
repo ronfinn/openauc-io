@@ -185,6 +185,7 @@ nav:
           - ADR-0003 AUCX container: decisions/ADR-0003-aucx-container-format.md
           - ADR-0004 Parser registry: decisions/ADR-0004-parser-plugin-registry.md
       - Contributing: project/contributing.md
+      - Release checklist: project/release-checklist.md
       - Security: project/security.md
       - Changelog: project/changelog.md
       - Licence and citation: project/licence.md

@@ -115,6 +115,17 @@ release, no tag.
   `docs` dependency group, `mkdocs.yml`, a strict-build CI job and a GitHub
   Pages deployment workflow. Resolves open question Q6 (documentation tooling).
 
+- Phase 9 — release mechanics, all of it publish-free: a coverage floor
+  (`fail_under = 93`) enforced by every `pytest` run; `scripts/release_check.py`,
+  which runs lint, format, types, tests and the strict docs build in one
+  command; `scripts/verify_artifacts.py`, which checks built distributions
+  against the declared version, `CITATION.cff`, the wheel's contents and — when
+  a tag is present — that the tag is `v<version>`; a **Release dry run**
+  workflow that builds, `twine check`s, verifies and smoke-tests the wheel in a
+  clean environment while holding read-only permissions and containing no
+  upload step; a written [release checklist][release-checklist]; and tests that
+  pin all of it. **Still nothing published, tagged or released.**
+
 ### Changed
 
 - README slimmed to a concise overview; long-form explanation now lives in the
@@ -160,3 +171,4 @@ placing per-scan data on a common grid remains an explicit, opt-in, recorded
 transformation that does not yet exist._
 
 [0.1.0a1]: https://github.com/ronfinn/openauc-io/commits/main
+[release-checklist]: https://ronfinn.github.io/openauc-io/project/release-checklist/
