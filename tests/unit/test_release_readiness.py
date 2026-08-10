@@ -169,6 +169,10 @@ def test_documented_files_exist() -> None:
         "docs/formats/parser-detection.md",
         "docs/formats/aucx.md",
         "schemas/generic-manifest-v1.schema.json",
+        "docs/project/release-checklist.md",
+        "scripts/release_check.py",
+        "scripts/verify_artifacts.py",
+        ".github/workflows/release.yml",
     ):
         assert (ROOT / relative).is_file(), relative
 

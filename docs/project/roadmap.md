@@ -15,6 +15,7 @@
 | 8 | Alpha-release readiness at `0.1.0a1` |
 | — | Deterministic synthetic-data generator |
 | — | This documentation site |
+| 9 | Release mechanics: coverage gate, release-check and artifact-verification scripts, a publish-free release dry-run workflow, and a written [release checklist](release-checklist.md) |
 
 ## Open questions
 
@@ -39,7 +40,6 @@ Seven were raised at the outset. Six are resolved:
 - Heterogeneous per-scan signal units.
 - An `acquired_at` field in the manifest schema.
 - Third-party parser discovery through entry points.
-- A coverage gate before the first alpha release.
 
 ## Never
 

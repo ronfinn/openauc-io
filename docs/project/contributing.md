@@ -25,10 +25,14 @@ uv run mkdocs build --strict
 Before a release checkpoint, also:
 
 ```bash
-uv run pytest --cov=openauc --cov-report=term-missing
 uv build
+uv run python scripts/verify_artifacts.py
 git diff --check
 ```
+
+Coverage is measured on every `pytest` run and enforced against the
+`fail_under` floor in `pyproject.toml`. The full procedure is the
+[release checklist](release-checklist.md).
 
 Typing is `strict`. **Do not weaken typing, validation or tests to make a check
 pass** — narrow types with assertions instead.
