@@ -7,10 +7,12 @@ must not claim that anything has been published.
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
 import tomllib
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -48,6 +50,59 @@ def _pull_request_paths() -> list[str]:
 def _scripts_executed_by_the_workflow() -> set[str]:
     text = RELEASE_WORKFLOW.read_text(encoding="utf-8")
     return set(re.findall(r"scripts/[\w./-]+\.py", text))
+
+
+# --------------------------------------------------------------------------- #
+# A deterministic artifact fixture
+#
+# The verifier's positive path must run on every test run without depending on
+# whatever happens to sit in the repository's `dist/`. Both the version and the
+# required wheel entries are read from the sources the verifier itself reads, so
+# the fixture cannot drift away from what is being verified.
+# --------------------------------------------------------------------------- #
+
+
+def _declared_version() -> str:
+    source = (ROOT / "src" / "openauc" / "__init__.py").read_text(encoding="utf-8")
+    match = re.search(r'^__version__\s*=\s*"([^"]+)"', source, flags=re.MULTILINE)
+    assert match is not None, "no __version__ in src/openauc/__init__.py"
+    return match.group(1)
+
+
+def _required_wheel_entries() -> tuple[str, ...]:
+    source = (SCRIPTS / "verify_artifacts.py").read_text(encoding="utf-8")
+    block = re.search(
+        r"REQUIRED_WHEEL_ENTRIES\s*=\s*\((.*?)\)", source, flags=re.DOTALL
+    )
+    assert block is not None, "verify_artifacts.py no longer declares required entries"
+    entries = tuple(re.findall(r'"([^"]+)"', block.group(1)))
+    assert entries
+    return entries
+
+
+def _fabricate_dist(directory: Path, *, omit: str | None = None) -> Path:
+    """Write the minimal wheel/sdist pair the verifier accepts."""
+    version = _declared_version()
+    wheel = directory / f"openauc-{version}-py3-none-any.whl"
+    with zipfile.ZipFile(wheel, "w") as archive:
+        for entry in _required_wheel_entries():
+            if entry == omit:
+                continue
+            archive.writestr(entry, b"")
+        archive.writestr(f"openauc-{version}.dist-info/METADATA", "")
+    (directory / f"openauc-{version}.tar.gz").write_bytes(b"")
+    return directory
+
+
+def _run_verifier(dist: Path) -> subprocess.CompletedProcess[str]:
+    env = {key: value for key, value in os.environ.items() if key != "GITHUB_REF"}
+    return subprocess.run(
+        [sys.executable, str(SCRIPTS / "verify_artifacts.py"), str(dist)],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -98,28 +153,53 @@ def test_verify_artifacts_reports_a_version_mismatch(tmp_path: Path) -> None:
     """A dist directory holding the wrong artifacts must fail, not pass."""
     (tmp_path / "openauc-9.9.9-py3-none-any.whl").write_bytes(b"")
     (tmp_path / "openauc-9.9.9.tar.gz").write_bytes(b"")
-    result = subprocess.run(
-        [sys.executable, str(SCRIPTS / "verify_artifacts.py"), str(tmp_path)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = _run_verifier(tmp_path)
     assert result.returncode == 1
     assert "expected openauc-" in result.stdout or "FAIL" in result.stdout
 
 
-def test_verify_artifacts_accepts_a_built_dist() -> None:
-    # Building is environment-dependent; only assert when a dist is present.
-    dist = ROOT / "dist"
-    if not dist.is_dir() or not list(dist.glob("*.whl")):
-        pytest.skip("no built distributions present")
-    result = subprocess.run(
-        [sys.executable, str(SCRIPTS / "verify_artifacts.py"), str(dist)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def test_verify_artifacts_accepts_a_well_formed_dist(tmp_path: Path) -> None:
+    """The positive path, on a fixture: never on the developer's own ``dist/``.
+
+    A repository-local ``dist/`` is mutable developer state — stale artifacts
+    from an earlier version make it hold two wheels and two sdists, which the
+    verifier is right to reject. The real build is integration-tested by the
+    release dry-run workflow; here we assert the verifier's contract against a
+    minimal, deterministic artifact pair.
+    """
+    dist = _fabricate_dist(tmp_path)
+    result = _run_verifier(dist)
     assert result.returncode == 0, result.stdout + result.stderr
+    assert "PASS" in result.stdout
+
+
+def test_verify_artifacts_rejects_a_wheel_missing_py_typed(tmp_path: Path) -> None:
+    dist = _fabricate_dist(tmp_path, omit="openauc/py.typed")
+    result = _run_verifier(dist)
+    assert result.returncode == 1
+    assert "missing openauc/py.typed" in result.stdout
+
+
+def test_verify_artifacts_rejects_a_corrupt_wheel(tmp_path: Path) -> None:
+    (tmp_path / f"openauc-{_declared_version()}-py3-none-any.whl").write_bytes(
+        b"not a zip"
+    )
+    (tmp_path / f"openauc-{_declared_version()}.tar.gz").write_bytes(b"")
+    result = _run_verifier(tmp_path)
+    assert result.returncode == 1
+    assert "not a readable wheel" in result.stdout
+
+
+def test_verify_artifacts_rejects_stale_artifacts_alongside_current_ones(
+    tmp_path: Path,
+) -> None:
+    """The defect that motivated the fixture: a dist holding two versions."""
+    dist = _fabricate_dist(tmp_path)
+    (dist / "openauc-0.0.1.dev0-py3-none-any.whl").write_bytes(b"")
+    (dist / "openauc-0.0.1.dev0.tar.gz").write_bytes(b"")
+    result = _run_verifier(dist)
+    assert result.returncode == 1
+    assert "expected exactly one wheel" in result.stdout
 
 
 # --------------------------------------------------------------------------- #
