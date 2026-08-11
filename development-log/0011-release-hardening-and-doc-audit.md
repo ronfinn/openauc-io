@@ -1,6 +1,6 @@
 # Development Log 0011 — Post-Phase-9 release hardening and documentation audit
 
-- **Date:** 2026-08-10
+- **Date:** 2026-08-11
 - **Branch:** `docs/post-phase9-refresh` (from `main` after PR #22 and PR #23)
 - **Status:** Documentation consistency work. **Nothing published, tagged or
   released.** `0.1.0a1` remains prepared and unpublished.
