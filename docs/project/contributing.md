@@ -22,17 +22,41 @@ uv run pytest
 uv run mkdocs build --strict
 ```
 
-Before a release checkpoint, also:
+`scripts/release_check.py` (above) runs all five in one command, to completion
+rather than stopping at the first failure. It builds, tags, releases and
+publishes nothing.
+
+Before a release checkpoint, also build and verify real artifacts:
 
 ```bash
+rm -rf dist
 uv build
 uv run python scripts/verify_artifacts.py
+uvx twine check --strict dist/*
 git diff --check
 ```
 
+Empty `dist/` first. `verify_artifacts.py` requires **exactly one** wheel and
+**exactly one** sdist — that strictness is the point, and a `dist/` still
+holding an older build will (correctly) fail it.
+
 Coverage is measured on every `pytest` run and enforced against the
-`fail_under` floor in `pyproject.toml`. The full procedure is the
+`fail_under` floor in `pyproject.toml`. The floor guards against a collapse in
+coverage; it is not a per-module quality guarantee. The full procedure is the
 [release checklist](release-checklist.md).
+
+### Unit tests versus real artifacts
+
+Two different things are being tested, and they are kept apart deliberately:
+
+- **Unit tests** for the artifact verifier build a minimal wheel/sdist pair in a
+  temporary directory, so they are deterministic and never depend on whatever
+  happens to sit in the repository's `dist/`. Running the suite does not require
+  a build, and a stale local `dist/` cannot break it.
+- **Integration** is the **Release dry run** workflow, which builds real
+  artifacts, runs `twine check --strict` and the verifier over them, and installs
+  the real wheel *alone* into a clean virtual environment to smoke-test the
+  console script. It has no path to PyPI.
 
 Typing is `strict`. **Do not weaken typing, validation or tests to make a check
 pass** — narrow types with assertions instead.

@@ -17,9 +17,13 @@
 | — | This documentation site |
 | 9 | Release mechanics: coverage gate, release-check and artifact-verification scripts, a publish-free release dry-run workflow, and a written [release checklist](release-checklist.md) |
 
+Release-hardening follow-ups after Phase 9 — such as isolating the artifact
+verifier's unit tests from the repository's mutable `dist/` — are corrections to
+that machinery, not a new phase.
+
 ## Open questions
 
-Seven were raised at the outset. Six are resolved:
+Seven were raised at the outset. All seven are resolved:
 
 | Question | Status |
 |----------|--------|
@@ -30,6 +34,13 @@ Seven were raised at the outset. Six are resolved:
 | Q5 — Provenance schema and checksum algorithm | **Resolved**: SHA-256, per-source entries (ADR-0003) |
 | Q6 — Documentation tooling | **Resolved**: MkDocs Material — this site |
 | Q7 — CLI command surface | **Resolved**: six commands with documented exit codes |
+
+## Next milestone
+
+The first public alpha release of `0.1.0a1` — tag, GitHub release, PyPI upload,
+each a manual step in the [release checklist](release-checklist.md) — comes
+before any larger model or vendor-format work. As of Phase 9 it has not been
+taken.
 
 ## Candidates, not commitments
 

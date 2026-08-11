@@ -61,7 +61,21 @@ non-goals](../concepts/scientific-boundaries.md).
 
 ## Tooling
 
-- Coverage is informational; no `fail_under` gate is enforced in CI.
+- The coverage floor is **global and deliberately below the measured figure**.
+  `fail_under` in `pyproject.toml` is enforced by every `pytest` run, including
+  CI, but it exists to catch a collapse in coverage — a module landing untested,
+  coverage silently switched off — not to certify quality. There is no per-file
+  floor, so a new untested module can land while the total stays above the
+  floor, and the floor says nothing about whether the covered behaviour is
+  scientifically correct.
+- Artifact verification is strict by design: `scripts/verify_artifacts.py`
+  requires **exactly one** wheel and **exactly one** sdist, so it must be run
+  against a freshly emptied `dist/`. Its unit tests use isolated temporary
+  fixtures; the real artifacts are exercised by the Release dry-run workflow.
+- `scripts/release_check.py` covers the source-tree gates only. It does not
+  build, verify artifacts, tag, release or publish.
+- The release dry run builds on Linux and one Python version; the wheel is
+  `py3-none-any`, so this checks packaging, not platform support.
 - Python 3.13 support rests on CI; local development here uses 3.12.
 
 ## Next step
