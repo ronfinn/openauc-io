@@ -40,20 +40,32 @@ deliberately, and tests pin that.
 
 `publish.yml` has two jobs, and the split is the security boundary:
 
-- **`build-and-verify`** checks out the released tag, runs the full release
+- **`build-and-verify`** checks out `github.sha` — the immutable commit the
+  Release was published from, rather than re-resolving the tag *name* — runs
+  the full release
   check suite, builds from a clean `dist/`, runs `twine check --strict`, runs
   `scripts/verify_artifacts.py` — which on a `release` event also asserts that
   the tag is `v<version>`, derived from the sources rather than hard-coded —
   smoke-tests the real wheel in a fresh virtualenv, and uploads the
   distributions as an Actions artifact. It holds **no** publishing identity.
 - **`publish-to-pypi`** downloads that artifact and uploads it with
-  `pypa/gh-action-pypi-publish`, pinned to a commit SHA. It does not check out
-  the repository, install dependencies or run any project code. Its only
-  privilege is `id-token: write`.
+  `pypa/gh-action-pypi-publish`. It does not check out the repository, install
+  dependencies or run any project code. Its only privilege is `id-token:
+  write`.
 
-There is no `workflow_dispatch` on `publish.yml`: the published GitHub Release
-is the only way to reach PyPI. `skip-existing` is not set, so republishing an
-already-published version fails loudly.
+Every external action in `publish.yml` — not just the publishing one — is
+pinned to a full commit SHA with the release named in a comment beside it, and
+a test fails the suite if any pin is reverted to a mutable tag.
+
+There is no `workflow_dispatch` on `publish.yml`: a published GitHub Release is
+the only way to *start* a publication. GitHub's ordinary re-run of that run, or
+of its failed jobs, is still available and keeps the original event's commit and
+tag, so it republishes exactly the same thing. Re-running is the right move when
+publication failed before any distribution was accepted — a mistyped Trusted
+Publisher or a missing `pypi` environment, say. If publication partly succeeded,
+or the version already exists on PyPI, investigate the PyPI state and follow
+release recovery instead; `skip-existing` is not set, deliberately, so that
+condition fails loudly rather than passing in silence.
 
 ## One-time setup before the first publication
 
@@ -174,9 +186,16 @@ Then update the repository:
    `CITATION.cff`'s publication metadata, when work on the next version begins.
 
 None of these are enforced by tests, deliberately: the tests pin what the
-*machinery* may do — build, verify, never publish or tag — not which point in
-the release cycle the repository currently occupies. A clone that has fetched
-`v0.1.0a1` must still pass the whole suite.
+*machinery* may do, not which point in the release cycle the repository
+currently occupies. Those durable boundaries are:
+
+- the **Release dry run** may build and verify, and may never publish;
+- only `publish.yml` may publish to PyPI, and only on a published Release;
+- no automation manufactures or pushes a release tag;
+- no automation creates or publishes a GitHub Release.
+
+No test depends on whether `v0.1.0a1` currently exists — a clone that has
+fetched the tag must still pass the whole suite.
 
 ## Next step
 

@@ -13,9 +13,19 @@ name: Publish to PyPI
 #   tag is cheap and easy to do by accident; publishing a Release is a
 #   deliberate human act with a review step in front of it. A *draft* Release
 #   does not fire this event, so a release can be staged safely.
-# * **No `workflow_dispatch`.** There is deliberately no manual bypass of that
-#   gate. A botched release is corrected by yanking on PyPI and cutting a new
-#   version, not by re-running a publish by hand.
+# * **No `workflow_dispatch`.** There is deliberately no way to invoke a *new*,
+#   arbitrary publication by hand. GitHub's ordinary re-run of this run (or of
+#   its failed jobs) remains available and keeps the original event's
+#   `GITHUB_SHA` and `GITHUB_REF`, so it republishes the same commit and tag —
+#   appropriate when publication failed before any distribution was accepted,
+#   e.g. a mis-typed Trusted Publisher or environment. If publication partly
+#   succeeded, or the version already exists on PyPI, do not paper over it with
+#   `skip-existing`: inspect the PyPI state and follow release recovery.
+# * **Every external action is pinned to a commit SHA.** A mutable major tag on
+#   any step of this workflow is a supply-chain hole: checkout decides what
+#   source is built, setup-uv decides the build environment, upload-artifact
+#   decides what crosses the trust boundary, and download-artifact runs inside
+#   the job holding `id-token: write`.
 # * **Privilege separation.** `build-and-verify` runs project code but has no
 #   OIDC identity; `publish-to-pypi` has the OIDC identity but runs no project
 #   code — it only forwards the artifact the first job produced. Nothing that
@@ -45,14 +55,19 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Check out the released tag
-        uses: actions/checkout@v4
+      # `github.sha` is, for a `release` event, the immutable commit of the
+      # released tag. Checking that out rather than re-resolving the tag *name*
+      # means a tag moved between the Release and this run cannot change what
+      # is built. `GITHUB_REF` is still `refs/tags/<tag>`, so the verifier below
+      # continues to assert that the tag matches the packaged version.
+      - name: Check out the commit the release was published from
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           python-version: "3.12"
           enable-cache: true
@@ -90,7 +105,7 @@ jobs:
           /tmp/openauc-smoke/bin/python -c "import openauc; print(openauc.__version__)"
 
       - name: Upload the verified distributions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-dists
           path: dist/
@@ -113,9 +128,13 @@ jobs:
       id-token: write
     steps:
       # No checkout, no dependency install, no project script: this job's whole
-      # input is the artifact the verified build produced.
+      # input is the artifact the verified build produced in this same run.
+      # Actions scopes artifacts to their run, and this workflow uploads exactly
+      # one named artifact and downloads exactly that name, so what is published
+      # is what was verified. (Enforced digest checking between upload and
+      # download arrives in the v8 artifact actions; see the development log.)
       - name: Download the verified distributions
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-dists
           path: dist/

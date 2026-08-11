@@ -50,11 +50,20 @@ review. Publishing a GitHub Release is a deliberate, visible act performed
 through the UI, and it can be staged: a *draft* Release fires no event, so the
 release notes can be prepared and checked before anything is authorised.
 
-There is deliberately no `workflow_dispatch`, so there is no manual bypass of
-that gate. A botched release is corrected by yanking on PyPI and cutting a new
-version, not by re-running a publish by hand. `skip-existing` is likewise not
-set: re-publishing a version that already exists is a release mistake and must
-fail loudly.
+There is deliberately no `workflow_dispatch`. The distinction that buys is
+narrower than "no reruns", and worth stating precisely: there is no way to
+invoke a *new, arbitrary* publication by hand. GitHub's ordinary re-run of the
+release-triggered run — or of its failed jobs — remains available, and a rerun
+keeps the original event's `GITHUB_SHA` and `GITHUB_REF`, so it rebuilds and
+republishes the same commit and tag rather than whatever a branch has since
+become.
+
+Rerunning is therefore the right response when publication failed *before* any
+distribution was accepted: a mistyped Trusted Publisher, a `pypi` environment
+that did not yet exist. If publication partly succeeded, or the version already
+exists on PyPI, the answer is to inspect the PyPI state and follow release
+recovery — not `skip-existing`, which is deliberately unset so that condition
+fails loudly instead of passing in silence.
 
 ## 5. Privilege separation between the two jobs
 
@@ -76,9 +85,43 @@ additionally asserts that the release tag is `v<version>` — the tag and the
 packaged version cannot silently disagree. The expected version is derived from
 the sources; no version is hard-coded in the workflow.
 
-The publishing action is pinned to the commit behind `v1.14.2`
-(`dc37677b…`), not to a mutable tag, and a test enforces that the pin is a
-40-character SHA.
+The build job checks out `github.sha`, which for a `release` event is the
+immutable commit the Release was published from — not the tag *name*, which
+would be re-resolved at checkout time and could have been moved in between.
+`GITHUB_REF` remains `refs/tags/<tag>`, so the verifier's tag check is
+unaffected. A test pins both the ref and `persist-credentials: false`.
+
+### Pinning every action, not only the publisher
+
+The first draft pinned `pypa/gh-action-pypi-publish` to a commit SHA and left
+`actions/checkout`, `astral-sh/setup-uv` and the artifact actions on mutable
+major tags. That is the wrong boundary. On the production release path,
+checkout decides *what source is built*, setup-uv decides *the environment it
+is built in*, upload-artifact decides *what crosses into the privileged job*,
+and download-artifact *executes inside the job holding `id-token: write`*.
+Compromising any of them is as good as compromising the publisher.
+
+All five are now pinned to full commit SHAs resolved from the official
+repositories, each with the release named beside it, and a test fails if any is
+reverted to `@v4`/`@v5`/`@main`. The pins hold the majors already in use — this
+is security hardening, not an upgrade. The dry run and ordinary CI keep the
+repository's usual convention: they are not on the publication path, and
+widening the change would blur what is being hardened.
+
+### The artifact hand-off
+
+The distributions cross the privilege boundary as a single named Actions
+artifact: one upload in the build job, one download in the publish job, the same
+name, within one run — Actions scopes artifacts to their run, so nothing from
+elsewhere can be substituted. A test pins the one-upload/one-download/matching-
+name shape.
+
+Worth recording accurately rather than optimistically: *enforced* digest
+checking between upload and download is a feature of the **v8** artifact
+actions, which error on a hash mismatch by default. The v4 actions pinned here
+do not document that check, so the integrity property currently rests on
+same-run scoping and SHA-pinned actions, not on a verified digest. Moving to v8
+would add it, and is a deliberate major upgrade for another change.
 
 ## 6. How the Phase 9 tests changed
 

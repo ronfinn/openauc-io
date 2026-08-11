@@ -451,6 +451,54 @@ def test_publish_step_is_pinned_to_a_commit_sha() -> None:
     assert re.fullmatch(r"[0-9a-f]{40}", ref), f"not a commit SHA: {ref!r}"
 
 
+def test_every_action_in_the_publish_workflow_is_pinned_to_a_commit_sha() -> None:
+    """Not just the PyPI action: every step of the production release path.
+
+    `checkout` decides what source is built, `setup-uv` decides the build
+    environment, `upload-artifact` decides what crosses the trust boundary, and
+    `download-artifact` runs inside the job holding `id-token: write`. A
+    mutable `@v4`/`@v5`/`@main` on any of them reopens the hole this workflow
+    closes, so reverting a pin must fail the suite.
+
+    Deliberately scoped to `publish.yml`: the dry run and ordinary CI are not
+    on the production publication path and keep the repository's usual pins.
+    """
+    steps = [
+        step for job in _publish_jobs() for step in _publish_steps(job) if _uses(step)
+    ]
+    assert len(steps) >= 5, "expected the workflow to use several actions"
+    for step in steps:
+        action, _, ref = _uses(step).partition("@")
+        assert re.fullmatch(r"[0-9a-f]{40}", ref), f"{action} is pinned to {ref!r}"
+
+
+def test_publish_workflow_pins_carry_a_readable_version_comment() -> None:
+    """A bare SHA is unreviewable; each pin names the release it is."""
+    for line in PUBLISH_WORKFLOW.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("uses:"):
+            continue
+        assert re.search(r"#\s*v\d+\.\d+", stripped), stripped
+
+
+def test_build_job_checks_out_the_immutable_release_commit() -> None:
+    """`github.sha` is the released commit; the tag *name* is re-resolvable.
+
+    Checking out `github.sha` means a tag moved between publishing the Release
+    and this run cannot change what is built. `GITHUB_REF` is still the tag
+    ref, so `verify_artifacts.py` keeps checking tag against version.
+    """
+    checkouts = [
+        step
+        for step in _publish_steps("build-and-verify")
+        if _uses(step).startswith("actions/checkout@")
+    ]
+    assert len(checkouts) == 1
+    options = _with(checkouts[0])
+    assert options["ref"] == "${{ github.sha }}"
+    assert options["persist-credentials"] is False
+
+
 def test_publish_step_supplies_no_credentials() -> None:
     """Trusted Publishing means no username, no password, no API token."""
     for step in _publish_steps("publish-to-pypi"):
