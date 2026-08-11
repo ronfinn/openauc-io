@@ -472,6 +472,37 @@ def test_every_action_in_the_publish_workflow_is_pinned_to_a_commit_sha() -> Non
         assert re.fullmatch(r"[0-9a-f]{40}", ref), f"{action} is pinned to {ref!r}"
 
 
+def test_downloaded_artifact_digest_mismatch_fails_the_publication() -> None:
+    """Integrity is checked, not assumed, before the PyPI step ever runs.
+
+    The upload records the artifact's digest; `download-artifact` v8 validates
+    the download against it. `digest-mismatch: error` is v8's default, but a
+    production policy must not rest on an upstream default, so it is stated
+    explicitly — and pinned here.
+    """
+    steps = _publish_steps("publish-to-pypi")
+    downloads = [
+        step for step in steps if _uses(step).startswith("actions/download-artifact@")
+    ]
+    assert len(downloads) == 1
+    action, _, ref = _uses(downloads[0]).partition("@")
+    assert re.fullmatch(r"[0-9a-f]{40}", ref), f"{action} is pinned to {ref!r}"
+    assert _with(downloads[0])["digest-mismatch"] == "error"
+
+    # The digest check is a v8 capability: a downgrade would silently remove it.
+    line = next(
+        line
+        for line in PUBLISH_WORKFLOW.read_text(encoding="utf-8").splitlines()
+        if "actions/download-artifact@" in line
+    )
+    assert re.search(r"#\s*v8\.\d+", line), line
+
+    # And it must run before publication: the download is the first step.
+    assert steps.index(downloads[0]) < min(
+        index for index, step in enumerate(steps) if PUBLISHING_ACTION in _uses(step)
+    )
+
+
 def test_publish_workflow_pins_carry_a_readable_version_comment() -> None:
     """A bare SHA is unreviewable; each pin names the release it is."""
     for line in PUBLISH_WORKFLOW.read_text(encoding="utf-8").splitlines():

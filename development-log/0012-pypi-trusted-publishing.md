@@ -116,12 +116,19 @@ name, within one run — Actions scopes artifacts to their run, so nothing from
 elsewhere can be substituted. A test pins the one-upload/one-download/matching-
 name shape.
 
-Worth recording accurately rather than optimistically: *enforced* digest
-checking between upload and download is a feature of the **v8** artifact
-actions, which error on a hash mismatch by default. The v4 actions pinned here
-do not document that check, so the integrity property currently rests on
-same-run scoping and SHA-pinned actions, not on a verified digest. Moving to v8
-would add it, and is a deliberate major upgrade for another change.
+Same-run scoping alone would leave integrity assumed rather than checked, so
+the boundary is closed with a digest check. The upload side already records the
+artifact's digest with GitHub; `actions/download-artifact` **v8.0.1** validates
+what it downloads against that expected digest, and the step sets
+`digest-mismatch: error` explicitly. That is v8's default too, but a production
+security policy should not depend on an upstream default remaining what it is
+today. A mismatch therefore fails the publish job *before* the PyPI action
+executes — nothing that failed validation can reach PyPI.
+
+`download-artifact` was upgraded to v8 for exactly this reason and on its own.
+The other four actions stay on the majors already in use, pinned as they were:
+this change closes the artifact-integrity gap before the first publication and
+does nothing else.
 
 ## 6. How the Phase 9 tests changed
 

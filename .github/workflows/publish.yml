@@ -130,14 +130,20 @@ jobs:
       # No checkout, no dependency install, no project script: this job's whole
       # input is the artifact the verified build produced in this same run.
       # Actions scopes artifacts to their run, and this workflow uploads exactly
-      # one named artifact and downloads exactly that name, so what is published
-      # is what was verified. (Enforced digest checking between upload and
-      # download arrives in the v8 artifact actions; see the development log.)
+      # one named artifact and downloads exactly that name.
+      #
+      # Integrity is checked, not merely assumed: the upload records the
+      # artifact's digest, and download-artifact v8 validates what it downloads
+      # against the digest GitHub holds. `digest-mismatch: error` is stated
+      # explicitly — it is also v8's default, but the production security policy
+      # must not rest on an upstream default that could change. A mismatch fails
+      # this job, so the PyPI publishing step below never runs.
       - name: Download the verified distributions
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-dists
           path: dist/
+          digest-mismatch: error
 
       - name: Publish distributions to PyPI
         # Pinned to the commit behind v1.14.2. No username and no password:
