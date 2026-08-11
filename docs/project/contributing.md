@@ -58,6 +58,13 @@ Two different things are being tested, and they are kept apart deliberately:
   the real wheel *alone* into a clean virtual environment to smoke-test the
   console script. It has no path to PyPI.
 
+Publishing lives in a separate workflow, `.github/workflows/publish.yml`, which
+runs *only* when a GitHub Release is published and uploads over PyPI Trusted
+Publishing (OIDC) — there is no PyPI token in this repository. Its build job
+runs project code but holds no credential; its publish job holds the OIDC
+identity but runs no project code. Neither workflow ever creates a tag or a
+GitHub Release. See the [release checklist](release-checklist.md).
+
 Typing is `strict`. **Do not weaken typing, validation or tests to make a check
 pass** — narrow types with assertions instead.
 

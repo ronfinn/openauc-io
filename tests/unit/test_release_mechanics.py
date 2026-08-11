@@ -22,21 +22,60 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
 WORKFLOWS = ROOT / ".github" / "workflows"
 RELEASE_WORKFLOW = WORKFLOWS / "release.yml"
+PUBLISH_WORKFLOW = WORKFLOWS / "publish.yml"
 EXPECTED_VERSION = "0.1.0a1"
 
+#: The one workflow permitted to hold a PyPI publishing identity. Every other
+#: workflow in the repository must be incapable of publishing.
+PUBLISHING_ACTION = "pypa/gh-action-pypi-publish"
 
-def _workflow() -> dict[object, object]:
-    loaded = yaml.safe_load(RELEASE_WORKFLOW.read_text(encoding="utf-8"))
+
+def _load(path: Path) -> dict[object, object]:
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
     assert isinstance(loaded, dict)
     return loaded
 
 
-def _triggers() -> dict[object, object]:
-    """YAML parses a bare ``on:`` key as the boolean ``True``."""
-    workflow = _workflow()
+def _workflow() -> dict[object, object]:
+    return _load(RELEASE_WORKFLOW)
+
+
+def _triggers_of(workflow: dict[object, object]) -> dict[object, object]:
+    """YAML 1.1 parses a bare ``on:`` key as the boolean ``True``."""
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert isinstance(triggers, dict)
     return triggers
+
+
+def _triggers() -> dict[object, object]:
+    return _triggers_of(_workflow())
+
+
+def _publish_workflow() -> dict[object, object]:
+    return _load(PUBLISH_WORKFLOW)
+
+
+def _publish_jobs() -> dict[str, dict[object, object]]:
+    jobs = _publish_workflow()["jobs"]
+    assert isinstance(jobs, dict)
+    return {str(name): job for name, job in jobs.items()}
+
+
+def _publish_steps(job: str) -> list[dict[str, object]]:
+    steps = _publish_jobs()[job]["steps"]
+    assert isinstance(steps, list)
+    assert all(isinstance(step, dict) for step in steps)
+    return list(steps)
+
+
+def _uses(step: dict[str, object]) -> str:
+    return str(step.get("uses", ""))
+
+
+def _with(step: dict[str, object]) -> dict[str, object]:
+    options = step.get("with") or {}
+    assert isinstance(options, dict)
+    return options
 
 
 def _pull_request_paths() -> list[str]:
@@ -274,11 +313,159 @@ def test_every_trigger_path_exists() -> None:
         assert (ROOT / path).exists(), path
 
 
-def test_no_workflow_publishes_anywhere() -> None:
+def test_no_workflow_uploads_with_twine() -> None:
+    """``twine upload`` is never the publication mechanism, anywhere.
+
+    Publication goes through the PyPA action under Trusted Publishing, which
+    needs no credential of ours; a `twine upload` would imply one exists.
+    """
     for workflow in WORKFLOWS.glob("*.yml"):
         text = workflow.read_text(encoding="utf-8").lower()
         assert "twine upload" not in text, workflow.name
-        assert "gh-action-pypi-publish" not in text, workflow.name
+
+
+def test_only_the_publish_workflow_may_publish_to_pypi() -> None:
+    """Narrower than "nothing publishes": exactly one workflow is allowed to.
+
+    Phase 9 could assert that no workflow published at all. Now that a
+    dedicated production workflow exists, the durable property is that the
+    publishing capability is confined to that one file.
+    """
+    holders = {
+        workflow.name
+        for workflow in WORKFLOWS.glob("*.yml")
+        if PUBLISHING_ACTION in workflow.read_text(encoding="utf-8").lower()
+    }
+    assert holders == {PUBLISH_WORKFLOW.name}
+
+
+def test_no_other_workflow_can_authenticate_to_pypi() -> None:
+    """`docs.yml` legitimately holds an OIDC identity — for GitHub Pages.
+
+    So the property is not "no workflow requests `id-token`" but: no workflow
+    other than the publishing one pairs an OIDC identity with a PyPI audience.
+    """
+    for workflow in WORKFLOWS.glob("*.yml"):
+        if workflow.name == PUBLISH_WORKFLOW.name:
+            continue
+        text = workflow.read_text(encoding="utf-8").lower()
+        if "id-token" in text:
+            assert "pypi" not in text, workflow.name
+            assert PUBLISHING_ACTION not in text, workflow.name
+
+
+def test_the_release_dry_run_requests_no_oidc_identity() -> None:
+    assert "id-token" not in RELEASE_WORKFLOW.read_text(encoding="utf-8").lower()
+
+
+# --------------------------------------------------------------------------- #
+# The production publishing workflow is pinned to its security model
+# --------------------------------------------------------------------------- #
+
+
+def test_publish_workflow_exists_and_is_parseable() -> None:
+    assert PUBLISH_WORKFLOW.is_file()
+    assert _publish_jobs()
+
+
+def test_publish_workflow_triggers_only_on_a_published_release() -> None:
+    """A pushed tag must not publish; a *draft* release must not publish."""
+    triggers = _triggers_of(_publish_workflow())
+    assert set(triggers) == {"release"}
+    release = triggers["release"]
+    assert isinstance(release, dict)
+    assert release["types"] == ["published"]
+
+
+@pytest.mark.parametrize("trigger", ["push", "pull_request", "workflow_dispatch"])
+def test_publish_workflow_has_no_bypass_trigger(trigger: str) -> None:
+    """No branch, no untrusted pull request and no manual run reaches PyPI."""
+    assert trigger not in _triggers_of(_publish_workflow())
+
+
+def test_publish_workflow_grants_no_workflow_scoped_permissions() -> None:
+    """OIDC is granted per job, never at workflow scope."""
+    assert _publish_workflow()["permissions"] == {}
+
+
+def test_publish_workflow_separates_build_from_publication() -> None:
+    jobs = _publish_jobs()
+    assert set(jobs) == {"build-and-verify", "publish-to-pypi"}
+    needs = jobs["publish-to-pypi"]["needs"]
+    assert needs == ["build-and-verify"] or needs == "build-and-verify"
+
+
+def test_publish_workflow_build_job_has_no_publishing_identity() -> None:
+    build = _publish_jobs()["build-and-verify"]
+    assert build["permissions"] == {"contents": "read"}
+    assert "environment" not in build
+    for step in _publish_steps("build-and-verify"):
+        assert PUBLISHING_ACTION not in _uses(step)
+
+
+def test_publish_job_holds_the_oidc_identity_and_nothing_else() -> None:
+    publish = _publish_jobs()["publish-to-pypi"]
+    assert publish["permissions"] == {"id-token": "write"}
+
+
+def test_publish_job_uses_the_pypi_environment() -> None:
+    environment = _publish_jobs()["publish-to-pypi"]["environment"]
+    name = environment["name"] if isinstance(environment, dict) else environment
+    assert name == "pypi"
+
+
+def test_publish_job_neither_checks_out_source_nor_runs_project_code() -> None:
+    """The OIDC-bearing job must execute none of this repository's code."""
+    for step in _publish_steps("publish-to-pypi"):
+        assert "run" not in step, f"publish job runs a shell step: {step}"
+        uses = _uses(step)
+        assert not uses.startswith("actions/checkout"), uses
+        assert not uses.startswith("astral-sh/setup-uv"), uses
+
+
+def test_distributions_cross_the_job_boundary_as_an_artifact() -> None:
+    """The published files are the ones the verified build produced."""
+    uploads = [
+        step
+        for step in _publish_steps("build-and-verify")
+        if _uses(step).startswith("actions/upload-artifact")
+    ]
+    downloads = [
+        step
+        for step in _publish_steps("publish-to-pypi")
+        if _uses(step).startswith("actions/download-artifact")
+    ]
+    assert len(uploads) == 1 and len(downloads) == 1
+    assert _with(uploads[0])["name"] == _with(downloads[0])["name"]
+
+
+def test_publish_step_is_pinned_to_a_commit_sha() -> None:
+    """A mutable tag on a credential-bearing action is a supply-chain risk."""
+    pinned = [
+        _uses(step)
+        for step in _publish_steps("publish-to-pypi")
+        if PUBLISHING_ACTION in _uses(step)
+    ]
+    assert len(pinned) == 1
+    _, _, ref = pinned[0].partition("@")
+    assert re.fullmatch(r"[0-9a-f]{40}", ref), f"not a commit SHA: {ref!r}"
+
+
+def test_publish_step_supplies_no_credentials() -> None:
+    """Trusted Publishing means no username, no password, no API token."""
+    for step in _publish_steps("publish-to-pypi"):
+        options = _with(step)
+        assert "user" not in options
+        assert "password" not in options
+    text = PUBLISH_WORKFLOW.read_text(encoding="utf-8").lower()
+    for forbidden in ("pypi_api_token", "pypi_token", "secrets.pypi", "twine upload"):
+        assert forbidden not in text, forbidden
+
+
+def test_publish_step_does_not_skip_existing_distributions() -> None:
+    """Republishing a version must fail loudly, not be silently tolerated."""
+    for step in _publish_steps("publish-to-pypi"):
+        assert "skip-existing" not in _with(step)
 
 
 # --------------------------------------------------------------------------- #
@@ -340,21 +527,44 @@ def test_release_checklist_is_documented_and_navigable() -> None:
     assert "project/release-checklist.md" in nav
 
 
-def test_release_checklist_keeps_publishing_manual() -> None:
-    """Durable: whatever the release status, publishing is never automated."""
+def _checklist() -> str:
     text = (ROOT / "docs" / "project" / "release-checklist.md").read_text(
         encoding="utf-8"
     )
-    normalised = " ".join(text.lower().split())
-    for step in ("tagging", "github release", "pypi upload"):
+    return " ".join(text.lower().split())
+
+
+def test_release_checklist_keeps_the_human_gates_manual() -> None:
+    """Durable: tagging and the GitHub Release are never automated.
+
+    Publication itself is now automated — but only downstream of a Release a
+    human published. What must stay documented as manual is that gate.
+    """
+    normalised = _checklist()
+    for step in ("tagging", "github release", "pypi"):
         assert step in normalised, step
     assert "manual" in normalised
     for claim in (
-        "the workflow publishes",
-        "publishing is automated",
-        "automatically uploads to pypi",
+        "the workflow creates the tag",
+        "tagging is automated",
+        "automatically creates the github release",
     ):
         assert claim not in normalised, claim
+
+
+def test_release_checklist_documents_the_trusted_publisher_setup() -> None:
+    """The manual PyPI/GitHub configuration must be written down, exactly."""
+    normalised = _checklist()
+    for fragment in (
+        "trusted publish",
+        "publish.yml",
+        "pypi",
+        "environment",
+        "openauc",
+        "ronfinn",
+        "openauc-io",
+    ):
+        assert fragment in normalised, fragment
 
 
 def test_changelog_documents_the_declared_version() -> None:

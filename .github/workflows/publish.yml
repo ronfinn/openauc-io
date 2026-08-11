@@ -1,0 +1,132 @@
+name: Publish to PyPI
+
+# The production publication workflow, and the only automation in this
+# repository permitted to upload to PyPI.
+#
+# Design, in short:
+#
+# * **Trusted Publishing (OIDC), not an API token.** PyPI mints a short-lived,
+#   scoped credential for this exact workflow file in this exact repository.
+#   There is no long-lived secret to leak, rotate or misuse, and no PyPI
+#   credential exists anywhere in the repository or its settings.
+# * **A published GitHub Release is the trigger, not a pushed tag.** Pushing a
+#   tag is cheap and easy to do by accident; publishing a Release is a
+#   deliberate human act with a review step in front of it. A *draft* Release
+#   does not fire this event, so a release can be staged safely.
+# * **No `workflow_dispatch`.** There is deliberately no manual bypass of that
+#   gate. A botched release is corrected by yanking on PyPI and cutting a new
+#   version, not by re-running a publish by hand.
+# * **Privilege separation.** `build-and-verify` runs project code but has no
+#   OIDC identity; `publish-to-pypi` has the OIDC identity but runs no project
+#   code — it only forwards the artifact the first job produced. Nothing that
+#   executes repository code can reach a PyPI credential.
+#
+# This workflow never creates a tag and never creates a GitHub Release. Both
+# remain human acts, performed before it runs. See
+# `docs/project/release-checklist.md`.
+
+on:
+  release:
+    types: [published]
+
+# No workflow-scoped privileges: each job requests exactly what it needs.
+permissions: {}
+
+concurrency:
+  group: publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-verify:
+    name: Build and verify the tagged release
+    runs-on: ubuntu-latest
+    # Unprivileged: reads the repository, holds no publishing identity. This is
+    # the same build and verification sequence as the Release dry run.
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --all-groups
+
+      - name: Run the full release check suite
+        run: uv run python scripts/release_check.py
+
+      - name: Start from a clean dist/
+        run: rm -rf dist
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Check distribution metadata (twine)
+        run: uvx twine check --strict dist/*
+
+      # On a `release` event `GITHUB_REF` is `refs/tags/<tag>`, so the verifier
+      # additionally asserts that the release tag is `v<version>` — the tag and
+      # the packaged version cannot disagree. The expected version is derived
+      # from the sources, never hard-coded here.
+      - name: Verify artifact names and release tag match the package version
+        run: uv run python scripts/verify_artifacts.py
+
+      - name: Install the wheel into a clean environment and smoke-test it
+        run: |
+          set -euxo pipefail
+          python -m venv /tmp/openauc-smoke
+          /tmp/openauc-smoke/bin/pip install --upgrade pip
+          /tmp/openauc-smoke/bin/pip install dist/*.whl
+          /tmp/openauc-smoke/bin/openauc version
+          /tmp/openauc-smoke/bin/openauc formats
+          /tmp/openauc-smoke/bin/python -c "import openauc; print(openauc.__version__)"
+
+      - name: Upload the verified distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+          if-no-files-found: error
+
+  publish-to-pypi:
+    name: Publish to PyPI (Trusted Publishing)
+    needs: [build-and-verify]
+    runs-on: ubuntu-latest
+    # The `pypi` environment must exist in the repository settings and is where
+    # protection rules (required reviewers, tag restrictions) are applied. It is
+    # also named in the PyPI Trusted Publisher configuration, so a run outside
+    # it cannot mint a usable token.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/openauc
+    permissions:
+      # The only privilege this job holds: the OIDC identity PyPI verifies.
+      # Deliberately no `contents` permission — nothing here reads the source.
+      id-token: write
+    steps:
+      # No checkout, no dependency install, no project script: this job's whole
+      # input is the artifact the verified build produced.
+      - name: Download the verified distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish distributions to PyPI
+        # Pinned to the commit behind v1.14.2. No username and no password:
+        # authentication is Trusted Publishing over OIDC. Attestations are left
+        # at their default (on for Trusted Publishing). `skip-existing` is
+        # deliberately NOT set — republishing an already-published version is a
+        # release mistake and must fail loudly rather than pass silently.
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: dist/
+          print-hash: true
