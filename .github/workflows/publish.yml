@@ -1,0 +1,157 @@
+name: Publish to PyPI
+
+# The production publication workflow, and the only automation in this
+# repository permitted to upload to PyPI.
+#
+# Design, in short:
+#
+# * **Trusted Publishing (OIDC), not an API token.** PyPI mints a short-lived,
+#   scoped credential for this exact workflow file in this exact repository.
+#   There is no long-lived secret to leak, rotate or misuse, and no PyPI
+#   credential exists anywhere in the repository or its settings.
+# * **A published GitHub Release is the trigger, not a pushed tag.** Pushing a
+#   tag is cheap and easy to do by accident; publishing a Release is a
+#   deliberate human act with a review step in front of it. A *draft* Release
+#   does not fire this event, so a release can be staged safely.
+# * **No `workflow_dispatch`.** There is deliberately no way to invoke a *new*,
+#   arbitrary publication by hand. GitHub's ordinary re-run of this run (or of
+#   its failed jobs) remains available and keeps the original event's
+#   `GITHUB_SHA` and `GITHUB_REF`, so it republishes the same commit and tag —
+#   appropriate when publication failed before any distribution was accepted,
+#   e.g. a mis-typed Trusted Publisher or environment. If publication partly
+#   succeeded, or the version already exists on PyPI, do not paper over it with
+#   `skip-existing`: inspect the PyPI state and follow release recovery.
+# * **Every external action is pinned to a commit SHA.** A mutable major tag on
+#   any step of this workflow is a supply-chain hole: checkout decides what
+#   source is built, setup-uv decides the build environment, upload-artifact
+#   decides what crosses the trust boundary, and download-artifact runs inside
+#   the job holding `id-token: write`.
+# * **Privilege separation.** `build-and-verify` runs project code but has no
+#   OIDC identity; `publish-to-pypi` has the OIDC identity but runs no project
+#   code — it only forwards the artifact the first job produced. Nothing that
+#   executes repository code can reach a PyPI credential.
+#
+# This workflow never creates a tag and never creates a GitHub Release. Both
+# remain human acts, performed before it runs. See
+# `docs/project/release-checklist.md`.
+
+on:
+  release:
+    types: [published]
+
+# No workflow-scoped privileges: each job requests exactly what it needs.
+permissions: {}
+
+concurrency:
+  group: publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-verify:
+    name: Build and verify the tagged release
+    runs-on: ubuntu-latest
+    # Unprivileged: reads the repository, holds no publishing identity. This is
+    # the same build and verification sequence as the Release dry run.
+    permissions:
+      contents: read
+    steps:
+      # `github.sha` is, for a `release` event, the immutable commit of the
+      # released tag. Checking that out rather than re-resolving the tag *name*
+      # means a tag moved between the Release and this run cannot change what
+      # is built. `GITHUB_REF` is still `refs/tags/<tag>`, so the verifier below
+      # continues to assert that the tag matches the packaged version.
+      - name: Check out the commit the release was published from
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --all-groups
+
+      - name: Run the full release check suite
+        run: uv run python scripts/release_check.py
+
+      - name: Start from a clean dist/
+        run: rm -rf dist
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Check distribution metadata (twine)
+        run: uvx twine check --strict dist/*
+
+      # On a `release` event `GITHUB_REF` is `refs/tags/<tag>`, so the verifier
+      # additionally asserts that the release tag is `v<version>` — the tag and
+      # the packaged version cannot disagree. The expected version is derived
+      # from the sources, never hard-coded here.
+      - name: Verify artifact names and release tag match the package version
+        run: uv run python scripts/verify_artifacts.py
+
+      - name: Install the wheel into a clean environment and smoke-test it
+        run: |
+          set -euxo pipefail
+          python -m venv /tmp/openauc-smoke
+          /tmp/openauc-smoke/bin/pip install --upgrade pip
+          /tmp/openauc-smoke/bin/pip install dist/*.whl
+          /tmp/openauc-smoke/bin/openauc version
+          /tmp/openauc-smoke/bin/openauc formats
+          /tmp/openauc-smoke/bin/python -c "import openauc; print(openauc.__version__)"
+
+      - name: Upload the verified distributions
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-dists
+          path: dist/
+          if-no-files-found: error
+
+  publish-to-pypi:
+    name: Publish to PyPI (Trusted Publishing)
+    needs: [build-and-verify]
+    runs-on: ubuntu-latest
+    # The `pypi` environment must exist in the repository settings and is where
+    # protection rules (required reviewers, tag restrictions) are applied. It is
+    # also named in the PyPI Trusted Publisher configuration, so a run outside
+    # it cannot mint a usable token.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/openauc
+    permissions:
+      # The only privilege this job holds: the OIDC identity PyPI verifies.
+      # Deliberately no `contents` permission — nothing here reads the source.
+      id-token: write
+    steps:
+      # No checkout, no dependency install, no project script: this job's whole
+      # input is the artifact the verified build produced in this same run.
+      # Actions scopes artifacts to their run, and this workflow uploads exactly
+      # one named artifact and downloads exactly that name.
+      #
+      # Integrity is checked, not merely assumed: the upload records the
+      # artifact's digest, and download-artifact v8 validates what it downloads
+      # against the digest GitHub holds. `digest-mismatch: error` is stated
+      # explicitly — it is also v8's default, but the production security policy
+      # must not rest on an upstream default that could change. A mismatch fails
+      # this job, so the PyPI publishing step below never runs.
+      - name: Download the verified distributions
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-dists
+          path: dist/
+          digest-mismatch: error
+
+      - name: Publish distributions to PyPI
+        # Pinned to the commit behind v1.14.2. No username and no password:
+        # authentication is Trusted Publishing over OIDC. Attestations are left
+        # at their default (on for Trusted Publishing). `skip-existing` is
+        # deliberately NOT set — republishing an already-published version is a
+        # release mistake and must fail loudly rather than pass silently.
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: dist/
+          print-hash: true
