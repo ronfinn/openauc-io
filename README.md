@@ -138,6 +138,18 @@ uv run pytest              # tests
 uv run mkdocs build --strict
 ```
 
+Or run all of those source-tree gates in one command:
+
+```bash
+uv run python scripts/release_check.py
+```
+
+It checks the source tree only — it builds, tags, releases and publishes
+nothing. Building and verifying real distribution artifacts, clean-environment
+smoke testing, tagging, the GitHub release and the PyPI upload are separate
+steps, all documented in the
+[release checklist](https://ronfinn.github.io/openauc-io/project/release-checklist/).
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the Architecture Decision Records
 under [`docs/decisions/`](docs/decisions/).
 
