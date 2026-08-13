@@ -5,10 +5,11 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0a1] - unreleased
+## [0.1.0a1] - 2026-08-13
 
-First internally coherent alpha. **Not published**: no PyPI release, no GitHub
-release, no tag.
+First internally coherent alpha: the canonical data model, generic delimited
+ingestion, tiered validation, plotting, the AUCX archive, synthetic data, a CLI
+and the documentation site. No scientific analysis is implemented.
 
 ### Added
 
@@ -126,7 +127,7 @@ release, no tag.
   upload step, and whose pull-request triggers cover every script it runs, the
   packaging metadata and `uv.lock`; a written [release checklist][release-checklist];
   and tests that pin all of it — including that no workflow or script can create
-  or push a release tag. **Still nothing published, tagged or released.**
+  or push a release tag, and that no automation creates a GitHub Release.
 
 ### Changed
 
