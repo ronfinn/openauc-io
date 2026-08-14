@@ -136,7 +136,8 @@ uv run openauc formats      # lists aucx, generic-long, generic-wide
 
 ```python
 import openauc
-print(openauc.__version__)          # '0.1.0a1'
+
+print(openauc.__version__)  # '0.1.0a1'
 print([f.format_id for f in openauc.available_formats()])
 # ['aucx', 'generic-long', 'generic-wide']
 ```

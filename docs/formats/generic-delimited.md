@@ -15,8 +15,8 @@ experiment identity and metadata.
 ```python
 import openauc
 
-experiment = openauc.load("path/to/experiment")     # a directory
-experiment = openauc.load("path/to/experiment/scans.csv")   # a data file
+experiment = openauc.load("path/to/experiment")  # a directory
+experiment = openauc.load("path/to/experiment/scans.csv")  # a data file
 experiment = openauc.load("path/to/experiment", format="generic-long")
 experiment = openauc.load("dir", manifest="dir/manifest.json")
 

@@ -34,14 +34,14 @@ ax = plot_scan(experiment, "scan_001")
 ```python
 ax = plot_scans(
     experiment,
-    ax=None,               # draw on your own Axes instead
+    ax=None,  # draw on your own Axes instead
     scan_ids=["scan_001", "scan_003"],  # restrict and order
     title="Custom title",
     legend=True,
-    label_elapsed=True,    # append 't = 600 s' to legend entries
+    label_elapsed=True,  # append 't = 600 s' to legend entries
     colormap="viridis",
     linewidth=1.0,
-    marker=".",            # mark individual observations
+    marker=".",  # mark individual observations
 )
 ```
 
@@ -91,14 +91,15 @@ collections beyond the lines and the axes furniture.
 
 ```python
 shared = openauc.load("examples/data/demo_experiment")
-plot_scans(shared)     # every line shares one radius axis
+plot_scans(shared)  # every line shares one radius axis
 
 from openauc.synthetic import SyntheticExperimentConfig, generate_experiment
+
 ragged = generate_experiment(
     SyntheticExperimentConfig(scenario="per-scan-radius", n_scans=5)
 )
 ax = plot_scans(ragged)
-print([len(line.get_xdata()) for line in ax.lines])   # differing lengths
+print([len(line.get_xdata()) for line in ax.lines])  # differing lengths
 ```
 
 Scans carrying no observations are skipped.

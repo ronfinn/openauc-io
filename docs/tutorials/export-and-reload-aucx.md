@@ -59,12 +59,12 @@ re-encoding and no heavy dependency.
 
 ```python
 info = openauc.inspect_aucx("demo.aucx")
-info.aucx_format_version   # '1.0'
-info.radius_axis_mode      # RadiusAxisMode.SHARED
+info.aucx_format_version  # '1.0'
+info.radius_axis_mode  # RadiusAxisMode.SHARED
 info.n_scans, info.n_points
-info.checksum_verified     # True
-info.export.exported_at    # when it was written
-info.members               # every member name
+info.checksum_verified  # True
+info.export.exported_at  # when it was written
+info.members  # every member name
 ```
 
 `inspect_aucx` **verifies every checksum** and raises on any problem.
@@ -73,7 +73,7 @@ info.members               # every member name
 
 ```python
 report = openauc.validate_aucx("demo.aucx")
-report.is_valid            # bool
+report.is_valid  # bool
 for issue in report.issues:
     print(issue.code, issue.message)
 ```
@@ -88,8 +88,8 @@ uv run openauc validate demo.aucx --readiness
 ## Overwrite protection
 
 ```python
-experiment.export("demo.aucx")                    # ArchiveError if it exists
-experiment.export("demo.aucx", overwrite=True)    # replaces it
+experiment.export("demo.aucx")  # ArchiveError if it exists
+experiment.export("demo.aucx", overwrite=True)  # replaces it
 ```
 
 Writes are **atomic**: a temporary sibling file is written, read back and

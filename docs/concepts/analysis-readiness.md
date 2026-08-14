@@ -10,9 +10,9 @@ scientifically suitable.
 
 ```python
 assessment = experiment.assess_readiness()
-assessment.sedimentation_velocity.status      # ReadinessStatus
+assessment.sedimentation_velocity.status  # ReadinessStatus
 assessment.sedimentation_equilibrium.status
-assessment.scientific_suitability.status      # always NOT_ASSESSED
+assessment.scientific_suitability.status  # always NOT_ASSESSED
 ```
 
 ## What readiness is not
@@ -69,11 +69,11 @@ appears in `advisory_issues` for the tiers it pertains to.
 
 ```python
 entry = experiment.assess_readiness().sedimentation_velocity
-entry.status            # ReadinessStatus
-entry.is_blocked        # bool
-entry.blocking_issues   # findings whose `blocks` names this tier
-entry.advisory_issues   # findings pertaining to this tier that block nothing
-entry.note              # why the status is what it is
+entry.status  # ReadinessStatus
+entry.is_blocked  # bool
+entry.blocking_issues  # findings whose `blocks` names this tier
+entry.advisory_issues  # findings pertaining to this tier that block nothing
+entry.note  # why the status is what it is
 entry.to_dict()
 ```
 
@@ -88,7 +88,7 @@ tier is blocked — that is the normal case for a historical dataset with sparse
 metadata, and it is a success, not a failure:
 
 ```python
-assert experiment.validate_structure().is_valid          # nothing wrong with it
+assert experiment.validate_structure().is_valid  # nothing wrong with it
 assert experiment.assess_readiness().sedimentation_velocity.is_blocked
 ```
 

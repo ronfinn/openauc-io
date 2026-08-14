@@ -13,7 +13,7 @@ import openauc
 experiment = openauc.load("examples/data/demo_experiment")
 
 structural = experiment.validate_structure()  # ARCHIVAL + STRUCTURAL, ERROR/WARNING
-everything = experiment.validate()            # all four tiers, all severities
+everything = experiment.validate()  # all four tiers, all severities
 ```
 
 Neither raises. `validate_structure()` is the narrower, historical view;
@@ -23,9 +23,9 @@ findings.
 ## The verdict
 
 ```python
-structural.is_valid          # True when there are no ERROR-severity findings
-structural.counts()          # (errors, warnings, infos)
-print(structural)            # 'structural validation: OK (no issues)'
+structural.is_valid  # True when there are no ERROR-severity findings
+structural.counts()  # (errors, warnings, infos)
+print(structural)  # 'structural validation: OK (no issues)'
 ```
 
 !!! warning "`is_valid` is a statement about structure only"
@@ -97,9 +97,9 @@ sparse = generate_experiment(
     )
 )
 
-assert sparse.validate_structure().is_valid          # nothing wrong with it
+assert sparse.validate_structure().is_valid  # nothing wrong with it
 assessment = sparse.assess_readiness()
-print(assessment.sedimentation_velocity.status)      # BLOCKED
+print(assessment.sedimentation_velocity.status)  # BLOCKED
 for issue in assessment.sedimentation_velocity.blocking_issues:
     print(" blocked by:", issue.code)
 ```
@@ -115,8 +115,8 @@ broken = generate_experiment(
     SyntheticExperimentConfig(scenario="invalid-structure", n_scans=4)
 )
 report = broken.validate_structure()
-print(report.is_valid)                # False
-print(sorted(set(report.codes())))    # ['duplicate_scan_id', 'scan_id_mismatch']
+print(report.is_valid)  # False
+print(sorted(set(report.codes())))  # ['duplicate_scan_id', 'scan_id_mismatch']
 ```
 
 ## Worked example: UNKNOWN vs OTHER experiment type
@@ -136,8 +136,8 @@ other = generate_experiment(
     SyntheticExperimentConfig(experiment_type=ExperimentType.OTHER, n_scans=4)
 )
 b = other.assess_readiness()
-print(b.sedimentation_velocity.status)      # NOT_APPLICABLE
-print(b.sedimentation_equilibrium.status)   # NOT_APPLICABLE
+print(b.sedimentation_velocity.status)  # NOT_APPLICABLE
+print(b.sedimentation_equilibrium.status)  # NOT_APPLICABLE
 ```
 
 `OTHER` is an explicit statement that the run is neither velocity nor
@@ -147,7 +147,12 @@ equilibrium. `UNKNOWN` is the *absence* of a statement, so both are assessed.
 
 ```python
 from openauc.models import (
-    AUCExperiment, ExperimentMetadata, Observations, Quantity, ScanMetadata, Unit,
+    AUCExperiment,
+    ExperimentMetadata,
+    Observations,
+    Quantity,
+    ScanMetadata,
+    Unit,
 )
 
 hand_built = AUCExperiment(
@@ -158,8 +163,8 @@ hand_built = AUCExperiment(
     ),
 )
 report = hand_built.validate()
-print(report.is_valid)                       # True — still perfectly valid
-print("provenance_absent" in report.codes()) # True, but INFO only
+print(report.is_valid)  # True — still perfectly valid
+print("provenance_absent" in report.codes())  # True, but INFO only
 ```
 
 `provenance_absent` is informational: a hand-built experiment legitimately has
