@@ -9,12 +9,43 @@
   the CI matrix.
 - **[uv](https://docs.astral.sh/uv/)** for the development workflow.
 
-!!! warning "Not published to PyPI"
-    `openauc` is at version `0.1.0a1` and has **not** been released. Do **not**
-    run `pip install openauc` — it will not install this project. Use one of
-    the three paths below.
+!!! warning "Alpha release"
+    `openauc 0.1.0a1` is published on PyPI as a **pre-release**. APIs and
+    behaviour may change without notice. Because it is a pre-release, a bare
+    `pip install openauc` will not install it — ask for the version explicitly,
+    as below.
 
-## 1. Development installation from a clone (recommended)
+## 1. Installation from PyPI (recommended for users)
+
+```bash
+python -m pip install "openauc==0.1.0a1"
+```
+
+If you would rather take whatever the newest pre-release is, without naming a
+version:
+
+```bash
+python -m pip install --pre openauc
+```
+
+Confirm:
+
+```bash
+openauc version
+```
+
+Expected output:
+
+```text
+0.1.0a1
+```
+
+That installs the published wheel — `openauc-0.1.0a1-py3-none-any.whl` — from
+[the PyPI project page](https://pypi.org/project/openauc/0.1.0a1/), together
+with the runtime dependencies listed below. The sdist,
+`openauc-0.1.0a1.tar.gz`, is published alongside it.
+
+## 2. Development installation from a clone
 
 Run these from wherever you keep source checkouts:
 
@@ -41,7 +72,7 @@ Expected output:
 This is an editable installation: edits to `src/openauc/` take effect
 immediately, with no reinstall.
 
-## 2. Installation from a locally built wheel
+## 3. Installation from a locally built wheel
 
 Use this to install into an environment that is not the repository's own — for
 a notebook, a separate project, or to check what a real user would get.
@@ -78,7 +109,7 @@ Confirm:
 .venv/bin/openauc version
 ```
 
-## 3. Editable installation into an existing environment
+## 4. Editable installation into an existing environment
 
 If you already have a virtual environment and want to develop against the
 source tree:

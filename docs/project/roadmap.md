@@ -16,6 +16,7 @@
 | — | Deterministic synthetic-data generator |
 | — | This documentation site |
 | 9 | Release mechanics: coverage gate, release-check and artifact-verification scripts, a publish-free release dry-run workflow, and a written [release checklist](release-checklist.md) |
+| 10 | First public alpha: `v0.1.0a1` tagged, published as a GitHub pre-release, and uploaded to [PyPI](https://pypi.org/project/openauc/0.1.0a1/) over Trusted Publishing |
 
 Release-hardening follow-ups after Phase 9 — such as isolating the artifact
 verifier's unit tests from the repository's mutable `dist/` — are corrections to
@@ -37,10 +38,10 @@ Seven were raised at the outset. All seven are resolved:
 
 ## Next milestone
 
-The first public alpha release of `0.1.0a1` — tag, GitHub release, PyPI upload,
-each a manual step in the [release checklist](release-checklist.md) — comes
-before any larger model or vendor-format work. As of Phase 9 it has not been
-taken.
+None is committed. The first public alpha has been taken — `0.1.0a1` is tagged,
+released and on PyPI — and no successor version has been selected, scheduled or
+promised. What comes next will be chosen from the candidates below, and this
+section will say so once it is.
 
 ## Candidates, not commitments
 

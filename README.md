@@ -42,20 +42,24 @@ and archiving analytical ultracentrifugation data.**
 
 ## Installation
 
-Not on PyPI. From a clone:
+From PyPI. `0.1.0a1` is an alpha, so ask for it by version — a bare
+`pip install openauc` skips pre-releases and will find nothing to install:
+
+```bash
+python -m pip install "openauc==0.1.0a1"
+openauc version                 # 0.1.0a1
+```
+
+`pip install --pre openauc` works too, if you want whatever the newest
+pre-release happens to be.
+
+For contributors, from a clone:
 
 ```bash
 git clone https://github.com/ronfinn/openauc-io.git
 cd openauc-io
 uv sync --all-groups
 uv run openauc version          # 0.1.0a1
-```
-
-Or install a locally built wheel:
-
-```bash
-uv build
-uv pip install dist/openauc-0.1.0a1-py3-none-any.whl
 ```
 
 Requires Python 3.11, 3.12 or 3.13. Full detail:

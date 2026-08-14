@@ -3,15 +3,20 @@
 The procedure for cutting a release of openauc-io. It is written down so a
 release is a repeatable act rather than a remembered one.
 
-!!! note "Status — nothing has been released yet"
+!!! note "Status — `0.1.0a1` is released"
 
-    `0.1.0a1` is prepared but **unpublished**: no PyPI upload, no GitHub
-    release, no tag. The machinery below is in place and exercised in dry-run
-    form; running it to completion is a separate, deliberate decision.
+    `v0.1.0a1` was tagged and published as a GitHub **pre-release**, and
+    `openauc 0.1.0a1` is on
+    [PyPI](https://pypi.org/project/openauc/0.1.0a1/). The machinery below has
+    now been run to completion, not only in dry-run form.
+
+    Publication went through Trusted Publishing: `publish.yml` mints a
+    short-lived OIDC token per run, and the protected `pypi` GitHub environment
+    is the only place that token is issued from. There is no PyPI API token.
 
     This note records a point in time, not a permanent property of the project.
-    Update it when a release is made — the "After the release" steps below say
-    so, and no test pins it.
+    Update it when the next release is made — the "After the release" steps
+    below say so, and no test pins it.
 
 ## What is automated and what is not
 
@@ -62,28 +67,33 @@ the only way to *start* a publication. GitHub's ordinary re-run of that run, or
 of its failed jobs, is still available and keeps the original event's commit and
 tag, so it republishes exactly the same thing. Re-running is the right move when
 publication failed before any distribution was accepted — a mistyped Trusted
-Publisher or a missing `pypi` environment, say. If publication partly succeeded,
+Publisher or a missing `pypi` environment, say. That is exactly what happened on
+the first attempt at `0.1.0a1`: the OIDC exchange was rejected with
+`invalid-publisher` ("valid token, but no corresponding publisher"), which
+fails *before* any upload, so correcting the publisher configuration and
+re-running the failed job of the same run was sufficient. If publication partly succeeded,
 or the version already exists on PyPI, investigate the PyPI state and follow
 release recovery instead; `skip-existing` is not set, deliberately, so that
 condition fails loudly rather than passing in silence.
 
-## One-time setup before the first publication
+## Publication identity
 
 Both of these are **human configuration steps** performed in GitHub and PyPI
-settings. No repository code performs them, and this documentation does not
-assert that they have been done.
+settings. No repository code performs them. Both now exist; what follows is
+what to *verify* before each release, not what to create again.
 
 ### 1. The `pypi` GitHub environment
 
-Create an environment named exactly `pypi` under **Settings → Environments**.
-Apply the protection rules available for the repository — required reviewers,
-and a deployment-branch/tag rule limiting it to release tags — so that
-publication has a human gate in addition to the Release gate.
+An environment named exactly `pypi` under **Settings → Environments**, carrying
+the protection rules available for the repository — required reviewers, and a
+deployment-branch/tag rule limiting it to release tags — so that publication
+has a human gate in addition to the Release gate. Publication of `0.1.0a1`
+paused at that gate until a human approved it.
 
 ### 2. The PyPI Trusted Publisher
 
-Under **PyPI → Publishing** (a *pending publisher*, since the project does not
-exist yet), configure exactly:
+The `openauc` project on PyPI has an **active** Trusted Publisher under
+**Manage project → Publishing**. Confirm it still reads exactly:
 
 | Field | Value |
 |-------|-------|
@@ -93,10 +103,11 @@ exist yet), configure exactly:
 | Workflow name | `publish.yml` |
 | Environment name | `pypi` |
 
-A pending publisher **creates** the project on its first successful
-publication. It does **not** reserve the name beforehand: until the first
-upload succeeds, the name `openauc` remains claimable by anyone, and no
-guarantee of its availability can be made here.
+Any mismatch — including an empty environment field — makes the OIDC exchange
+fail with `invalid-publisher`. Verify it; do not add a second publisher, and do
+not create a *pending* publisher: pending publishers exist only to create a
+project that does not yet exist on PyPI, which was how `openauc` was first
+created and is no longer the applicable procedure for this repository.
 
 Trusted Publishing uses a short-lived OIDC token minted per run. There is no
 PyPI API token, username or password anywhere in this repository or its
@@ -137,7 +148,7 @@ secrets, and none should ever be added.
 7. Run the **Release dry run** workflow from the Actions tab and confirm it is
    green.
 8. Confirm the `pypi` GitHub environment exists and is protected.
-9. Confirm the PyPI Trusted Publisher (or pending publisher) is configured
+9. Confirm the project's **active** PyPI Trusted Publisher is configured
    exactly as tabulated above.
 
 ## The release itself
@@ -180,7 +191,7 @@ Then update the repository:
    date, and open the next `## [Unreleased]` section.
 6. Update the status note at the top of this page, the version line on the
    [project index](index.md), and the README installation instructions, so none
-   still says the version is unpublished.
+   still says the version is unpublished. `0.1.0a1` is the worked example.
 7. Record the release in `docs/project/roadmap.md` and the development log.
 8. Bump the version in `src/openauc/__init__.py` and `CITATION.cff`, and update
    `CITATION.cff`'s publication metadata, when work on the next version begins.
