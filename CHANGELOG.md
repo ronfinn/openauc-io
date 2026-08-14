@@ -5,6 +5,8 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
 ## [0.1.0a1] - 2026-08-13
 
 First internally coherent alpha: the canonical data model, generic delimited
@@ -173,5 +175,6 @@ derivative or derived overlay is drawn, and no regridding API is offered:
 placing per-scan data on a common grid remains an explicit, opt-in, recorded
 transformation that does not yet exist._
 
-[0.1.0a1]: https://github.com/ronfinn/openauc-io/commits/main
+[Unreleased]: https://github.com/ronfinn/openauc-io/compare/v0.1.0a1...HEAD
+[0.1.0a1]: https://github.com/ronfinn/openauc-io/releases/tag/v0.1.0a1
 [release-checklist]: https://ronfinn.github.io/openauc-io/project/release-checklist/

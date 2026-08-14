@@ -1,7 +1,7 @@
 # Contributing to openauc-io
 
-Thanks for your interest in `openauc-io`. This project is in its **pre-alpha
-foundation** stage; APIs and structure will change. Contributions, issues and
+Thanks for your interest in `openauc-io`. This project is at its **first public
+alpha** (`0.1.0a1`); APIs and structure will change. Contributions, issues and
 design discussion are welcome.
 
 ## Development setup

@@ -5,8 +5,9 @@ non-goals](../concepts/scientific-boundaries.md).
 
 ## Status
 
-- **Pre-alpha (`0.1.0a1`), not published.** APIs may change without notice, and
-  the package is not on PyPI.
+- **First public alpha (`0.1.0a1`), published on PyPI as a pre-release.** APIs
+  may change without notice; availability is a packaging fact, not a stability
+  guarantee.
 
 ## Formats
 

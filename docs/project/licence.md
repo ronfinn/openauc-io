@@ -36,9 +36,9 @@ which GitHub renders as a "Cite this repository" panel.
 ```
 
 !!! warning "Cite the version you used"
-    The current version is `0.1.0a1`, a **pre-alpha that has not been
-    released**. APIs and behaviour may change. Record the exact commit if
-    reproducibility matters.
+    The current version is `0.1.0a1`, the **first public alpha**, released as a
+    pre-release. APIs and behaviour may change. Record the exact version, or the
+    exact commit, if reproducibility matters.
 
     Citing `openauc` documents how data were **imported, validated and
     archived**. It is not a citation for any scientific analysis, because

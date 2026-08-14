@@ -2,9 +2,10 @@
 
 ## Supported versions
 
-`openauc-io` is in **pre-alpha** development. No release has been made and there
-is no supported release line yet. Security fixes are applied to the `main`
-branch. This section will be updated when the first alpha is published.
+`openauc-io` is in **alpha** development. `0.1.0a1` is the first public
+release, and there is no supported release line yet: security fixes are applied
+to the `main` branch and reach users in the next release, not as patches to
+`0.1.0a1`. This section will be updated when a supported line exists.
 
 ## Reporting a vulnerability
 

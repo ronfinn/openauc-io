@@ -11,4 +11,7 @@
 | [Changelog](changelog.md) | Every release entry |
 | [Licence and citation](licence.md) | Apache-2.0 and how to cite |
 
-Current version: **`0.1.0a1`** — pre-alpha, not published.
+Current version: **`0.1.0a1`** — the first public alpha, published on
+[PyPI](https://pypi.org/project/openauc/0.1.0a1/) as a pre-release. Being
+installable is a packaging milestone, not a maturity claim: APIs may still
+change without notice, and no scientific analysis is implemented.
