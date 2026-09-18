@@ -10,9 +10,11 @@ release is a repeatable act rather than a remembered one.
     [PyPI](https://pypi.org/project/openauc/0.1.0a1/). The machinery below has
     now been run to completion, not only in dry-run form.
 
-    Publication went through Trusted Publishing: `publish.yml` mints a
-    short-lived OIDC token per run, and the protected `pypi` GitHub environment
-    is the only place that token is issued from. There is no PyPI API token.
+    Publication went through Trusted Publishing, on a short-lived OIDC token
+    minted per run. The publish job can request that token because it declares
+    `permissions: id-token: write`; it runs under `environment: pypi`, which
+    supplies the human protection gate and the `environment: pypi` claim the
+    configured PyPI publisher expects. There is no PyPI API token.
 
     This note records a point in time, not a permanent property of the project.
     Update it when the next release is made — the "After the release" steps
@@ -103,11 +105,21 @@ The `openauc` project on PyPI has an **active** Trusted Publisher under
 | Workflow name | `publish.yml` |
 | Environment name | `pypi` |
 
-Any mismatch — including an empty environment field — makes the OIDC exchange
-fail with `invalid-publisher`. Verify it; do not add a second publisher, and do
-not create a *pending* publisher: pending publishers exist only to create a
-project that does not yet exist on PyPI, which was how `openauc` was first
-created and is no longer the applicable procedure for this repository.
+If the publisher's claims and the ones the workflow actually presents do not
+correspond, the OIDC exchange fails with `invalid-publisher`. Verify it; do not
+add a second publisher, and do not create a *pending* publisher: pending
+publishers exist only to create a project that does not yet exist on PyPI,
+which was how `openauc` was first created and is no longer the applicable
+procedure for this repository.
+
+The environment field is **optional on PyPI's side**. Leaving it blank is
+permitted and yields a publisher scoped only to the repository and workflow —
+any job in `publish.yml` could then publish. This project sets it to `pypi`
+deliberately, because publication is meant to be bound to the protected `pypi`
+GitHub environment and its human gate. So: an omitted environment is not itself
+a misconfiguration, but it is not this project's chosen posture; and once an
+environment *is* configured on the publisher, the `environment` claim the
+workflow presents must match it.
 
 Trusted Publishing uses a short-lived OIDC token minted per run. There is no
 PyPI API token, username or password anywhere in this repository or its

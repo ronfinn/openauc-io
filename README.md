@@ -42,16 +42,21 @@ and archiving analytical ultracentrifugation data.**
 
 ## Installation
 
-From PyPI. `0.1.0a1` is an alpha, so ask for it by version — a bare
-`pip install openauc` skips pre-releases and will find nothing to install:
+From PyPI. `0.1.0a1` is an alpha, so ask for it by exact version — that is
+deterministic, and what resolves without a version depends on the installer and
+on what is published at the time:
 
 ```bash
 python -m pip install "openauc==0.1.0a1"
 openauc version                 # 0.1.0a1
 ```
 
-`pip install --pre openauc` works too, if you want whatever the newest
-pre-release happens to be.
+To opt in to whatever the newest pre-release happens to be, rather than naming
+one:
+
+```bash
+python -m pip install --pre openauc
+```
 
 For contributors, from a clone:
 

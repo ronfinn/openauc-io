@@ -7,7 +7,7 @@ visualising and archiving** analytical ultracentrifugation (AUC) data.
     `0.1.0a1` is the first public alpha, published on
     [PyPI](https://pypi.org/project/openauc/0.1.0a1/) as a pre-release. APIs may
     change without notice. Install it by exact version —
-    `pip install "openauc==0.1.0a1"` — or from a clone (see
+    `python -m pip install "openauc==0.1.0a1"` — or from a clone (see
     [Installation](getting-started/installation.md)).
 
 ## What it does

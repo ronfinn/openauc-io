@@ -11,9 +11,8 @@
 
 !!! warning "Alpha release"
     `openauc 0.1.0a1` is published on PyPI as a **pre-release**. APIs and
-    behaviour may change without notice. Because it is a pre-release, a bare
-    `pip install openauc` will not install it — ask for the version explicitly,
-    as below.
+    behaviour may change without notice. Ask for the version explicitly, as
+    below, so that what you get is the version you meant.
 
 ## 1. Installation from PyPI (recommended for users)
 
@@ -21,8 +20,12 @@
 python -m pip install "openauc==0.1.0a1"
 ```
 
-If you would rather take whatever the newest pre-release is, without naming a
-version:
+That is the project's recommended command. Naming the exact version is
+deterministic: `0.1.0a1` is a pre-release, and how a request without a version
+resolves depends on the installer, its configuration, and what is published at
+the time. Pinning removes all of that.
+
+To opt in to whatever the newest pre-release is, rather than naming one:
 
 ```bash
 python -m pip install --pre openauc

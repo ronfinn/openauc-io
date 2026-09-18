@@ -374,16 +374,21 @@ def test_the_documentation_makes_no_forbidden_claim() -> None:
             assert hits == [], (str(page), phrase, hits)
 
 
-def test_the_documentation_never_tells_users_to_pip_install_openauc() -> None:
-    """0.1.0a1 is a pre-release: a bare install resolves to nothing, or worse.
+def test_alpha_installation_guidance_is_explicit() -> None:
+    """Alpha installation guidance should be explicit and reproducible.
 
-    Installation instructions must name the version, or pass ``--pre``.
+    A documented command with no version and no ``--pre`` leaves what gets
+    installed up to the installer and to whatever is published at the time.
+    While the released version is a pre-release, instructions must name the
+    version or pass ``--pre``. This is a documentation policy, not a claim
+    that a bare install is invalid.
     """
     for page in [*DOCS.rglob("*.md"), ROOT / "README.md"]:
         text = page.read_text(encoding="utf-8").lower()
         for line in text.splitlines():
             stripped = line.strip().lstrip("$ ").strip()
             assert stripped != "pip install openauc", str(page)
+            assert stripped != "python -m pip install openauc", str(page)
             assert stripped != "uv pip install openauc", str(page)
 
 
@@ -394,7 +399,7 @@ def test_the_boundaries_are_stated_where_they_matter() -> None:
 
     install = (DOCS / "getting-started" / "installation.md").read_text(encoding="utf-8")
     assert "pypi" in install.lower()
-    assert 'openauc==0.1.0a1"' in install
+    assert 'python -m pip install "openauc==0.1.0a1"' in install
 
     boundaries = (DOCS / "concepts" / "scientific-boundaries.md").read_text(
         encoding="utf-8"

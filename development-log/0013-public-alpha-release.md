@@ -99,7 +99,7 @@ accepted, the run would have failed loudly rather than passing in silence.
 The documentation carried a point-in-time claim that the project was not
 published. That claim is now false, so the current-facing pages were updated:
 the README and the installation guide make PyPI the primary path (pinned to
-`openauc==0.1.0a1`, since a bare install skips pre-releases), and the
+`openauc==0.1.0a1`, so that an alpha is installed deterministically), and the
 documentation landing page, project index, known limitations, licence/citation
 note, security policy, release checklist and roadmap now describe a released
 first public alpha.
