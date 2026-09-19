@@ -841,3 +841,25 @@ def test_an_invalid_radius_mode_is_rejected(tmp_path: Path) -> None:
     )
     with pytest.raises(ArchiveError):
         read_aucx(broken)
+
+
+# --------------------------------------------------------------------------- #
+# Historical archives
+# --------------------------------------------------------------------------- #
+
+_V1_0_FIXTURE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "aucx" / "v1_0_example.aucx"
+)
+
+
+def test_historical_1_0_archive_stays_readable() -> None:
+    assert validate_aucx(_V1_0_FIXTURE).is_valid
+    assert inspect_aucx(_V1_0_FIXTURE).aucx_format_version == "1.0"
+    experiment = read_aucx(_V1_0_FIXTURE)
+    assert experiment.metadata.experiment_id == "fixture-v1-0"
+    assert [s.scan_id for s in experiment.scans] == ["a", "b"]
+    assert experiment.observations.mode is RadiusAxisMode.SHARED
+    assert experiment.metadata.acquired_at is not None
+    assert experiment.metadata.acquired_at.isoformat() == "2026-03-02T09:00:00+01:00"
+    stamps = [s.acquired_at.isoformat() for s in experiment.scans if s.acquired_at]
+    assert stamps == ["2026-03-02T09:00:05+01:00", "2026-03-02T09:10:05"]
