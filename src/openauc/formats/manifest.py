@@ -14,11 +14,18 @@ never inferred from a value here.
 from __future__ import annotations
 
 import json
+from datetime import date, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from openauc.exceptions import ManifestError
 from openauc.models import ExperimentType, OpticalSystem
@@ -32,6 +39,7 @@ __all__ = [
     "WideColumns",
     "WideScanColumn",
     "load_manifest",
+    "parse_timestamp",
 ]
 
 SUPPORTED_SCHEMA_VERSION = "1.0"
@@ -41,6 +49,48 @@ class _Base(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+def parse_timestamp(value: object) -> datetime:
+    """Parse an acquisition timestamp strictly; never guess, never convert.
+
+    Accepts an ISO-8601 date-time string, or a ``datetime`` (which is what a YAML
+    parser yields for an unquoted timestamp). An explicit UTC offset is preserved
+    exactly; a timestamp with no offset stays timezone-naive, meaning "timezone
+    not stated". Nothing is converted to another zone.
+
+    A date without a time of day is rejected rather than padded with midnight,
+    and so are numbers (an epoch value would imply a timezone and an origin).
+
+    Raises:
+        ValueError: if ``value`` is not an ISO-8601 date-time.
+    """
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        raise ValueError(
+            f"{value.isoformat()!r} is a date without a time of day; supply an "
+            "ISO-8601 date-time such as '2026-03-02T09:30:00+01:00'"
+        )
+    if not isinstance(value, str):
+        raise ValueError(
+            f"{value!r} is not an ISO-8601 date-time string "
+            f"(got {type(value).__name__})"
+        )
+    text = value.strip()
+    try:
+        date.fromisoformat(text)
+    except ValueError:
+        pass
+    else:
+        raise ValueError(
+            f"{value!r} is a date without a time of day; supply an ISO-8601 "
+            "date-time such as '2026-03-02T09:30:00+01:00'"
+        )
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        raise ValueError(f"{value!r} is not an ISO-8601 date-time") from None
+
+
 class ManifestExperiment(_Base):
     """Experiment identity, mirroring the canonical experiment metadata."""
 
@@ -48,8 +98,14 @@ class ManifestExperiment(_Base):
     name: str | None = None
     description: str | None = None
     experiment_type: ExperimentType = ExperimentType.UNKNOWN
+    acquired_at: datetime | None = None
     operator: str | None = None
     notes: str | None = None
+
+    @field_validator("acquired_at", mode="before")
+    @classmethod
+    def _strict_timestamp(cls, value: object) -> datetime | None:
+        return None if value is None else parse_timestamp(value)
 
 
 class ManifestInstrument(_Base):
@@ -91,6 +147,7 @@ class ManifestDefaults(_Base):
 
     optical_system: OpticalSystem | None = None
     signal_unit: str | None = None
+    sample_id: str | None = None
     cell: str | None = None
     channel: str | None = None
     wavelength_nm: float | None = None
@@ -104,6 +161,8 @@ class WideScanColumn(_Base):
     column: str
     scan_id: str
     elapsed_seconds: float | None = None
+    acquisition_timestamp: datetime | None = None
+    sample_id: str | None = None
     wavelength_nm: float | None = None
     optical_system: OpticalSystem | None = None
     rotor_speed_rpm: float | None = None
@@ -111,6 +170,11 @@ class WideScanColumn(_Base):
     cell: str | None = None
     channel: str | None = None
     source_scan_id: str | None = None
+
+    @field_validator("acquisition_timestamp", mode="before")
+    @classmethod
+    def _strict_timestamp(cls, value: object) -> datetime | None:
+        return None if value is None else parse_timestamp(value)
 
 
 class WideColumns(_Base):
@@ -144,6 +208,23 @@ class GenericManifest(_Base):
                 f"this build supports {SUPPORTED_SCHEMA_VERSION!r}"
             )
         return value
+
+    @model_validator(mode="after")
+    def _sample_references_resolve(self) -> GenericManifest:
+        declared = {sample.sample_id for sample in self.samples}
+        references = [("defaults.sample_id", self.defaults.sample_id)]
+        if self.columns is not None:
+            references.extend(
+                (f"columns.scans[{scan.column!r}].sample_id", scan.sample_id)
+                for scan in self.columns.scans
+            )
+        for location, sample_id in references:
+            if sample_id is not None and sample_id not in declared:
+                raise ValueError(
+                    f"{location} names sample {sample_id!r}, which is not "
+                    f"declared in 'samples' (declared: {sorted(declared)})"
+                )
+        return self
 
     @field_validator("data_file")
     @classmethod

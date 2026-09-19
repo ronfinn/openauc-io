@@ -27,6 +27,7 @@ from openauc.formats.manifest import (
     ManifestInstrument,
     ManifestSample,
     WideScanColumn,
+    parse_timestamp,
 )
 from openauc.formats.registry import register_parser
 from openauc.models import (
@@ -47,6 +48,7 @@ _LONG_REQUIRED = ("scan", "radius_cm", "signal")
 _LONG_OPTIONAL = (
     "elapsed_seconds",
     "acquisition_timestamp",
+    "sample_id",
     "cell",
     "channel",
     "wavelength_nm",
@@ -173,6 +175,7 @@ class _ScanInputs:
     scan_id: str
     elapsed_seconds: float | None = None
     acquired_at: datetime | None = None
+    sample_id: str | None = None
     cell: str | None = None
     channel: str | None = None
     wavelength_nm: float | None = None
@@ -211,6 +214,9 @@ def _build_scan_metadata(
         index=index,
         elapsed_time=elapsed,
         acquired_at=inputs.acquired_at,
+        sample_id=_resolve_str(
+            inputs.sample_id, defaults.sample_id, "sample_id", scan_id
+        ),
         cell=_resolve_str(inputs.cell, defaults.cell, "cell", scan_id),
         channel=_resolve_str(inputs.channel, defaults.channel, "channel", scan_id),
         wavelength=_quantity_or_none(wavelength, Unit.NANOMETRE),
@@ -261,6 +267,7 @@ def _experiment_metadata(manifest: GenericManifest) -> ExperimentMetadata:
         name=me.name,
         description=me.description,
         experiment_type=me.experiment_type,
+        acquired_at=me.acquired_at,
         operator=me.operator,
         notes=me.notes,
     )
@@ -311,6 +318,25 @@ def _sample_metadata(sample: ManifestSample) -> SampleMetadata:
 
 def _samples(manifest: GenericManifest) -> tuple[SampleMetadata, ...]:
     return tuple(_sample_metadata(s) for s in manifest.samples)
+
+
+def _check_sample_links(
+    scans: tuple[ScanMetadata, ...],
+    samples: tuple[SampleMetadata, ...],
+    path: Path,
+) -> None:
+    """Reject a scan that names a sample the manifest does not declare.
+
+    Only stated links are checked; a scan naming no sample is left unlinked.
+    """
+    declared = {sample.sample_id for sample in samples}
+    for scan in scans:
+        if scan.sample_id is not None and scan.sample_id not in declared:
+            raise ParseError(
+                f"{path.name}: scan {scan.scan_id!r} names sample "
+                f"{scan.sample_id!r}, which is not declared in the manifest "
+                f"'samples' (declared: {sorted(declared)})"
+            )
 
 
 def _require_manifest(manifest: GenericManifest | None, path: Path) -> GenericManifest:
@@ -431,11 +457,13 @@ class GenericLongParser(Parser):
             for index, scan_id in enumerate(order)
         )
         observations = self._observations(order, radii, signals, signal_unit)
+        samples = _samples(manifest)
+        _check_sample_links(scans, samples, table.path)
         experiment = AUCExperiment(
             metadata=_experiment_metadata(manifest),
             scans=scans,
             observations=observations,
-            samples=_samples(manifest),
+            samples=samples,
             instrument=_instrument_metadata(manifest),
         )
         assumptions = (
@@ -488,11 +516,10 @@ class GenericLongParser(Parser):
         acquired_at: datetime | None = None
         if acquired_raw is not None:
             try:
-                acquired_at = datetime.fromisoformat(acquired_raw)
-            except ValueError:
+                acquired_at = parse_timestamp(acquired_raw)
+            except ValueError as exc:
                 raise ParseError(
-                    f"{table.path.name} (scan {scan_id}): "
-                    f"acquisition_timestamp {acquired_raw!r} is not ISO-8601"
+                    f"{table.path.name} (scan {scan_id}): acquisition_timestamp: {exc}"
                 ) from None
 
         optical_raw = columns.get("optical_system")
@@ -500,6 +527,7 @@ class GenericLongParser(Parser):
             scan_id=scan_id,
             elapsed_seconds=as_float("elapsed_seconds"),
             acquired_at=acquired_at,
+            sample_id=columns.get("sample_id"),
             cell=columns.get("cell"),
             channel=columns.get("channel"),
             wavelength_nm=as_float("wavelength_nm"),
@@ -656,11 +684,13 @@ class GenericWideParser(Parser):
             signal_unit=signal_unit,
             radius_unit=Unit.CENTIMETRE,
         )
+        samples = _samples(manifest)
+        _check_sample_links(scans, samples, table.path)
         experiment = AUCExperiment(
             metadata=_experiment_metadata(manifest),
             scans=scans,
             observations=observations,
-            samples=_samples(manifest),
+            samples=samples,
             instrument=_instrument_metadata(manifest),
         )
         assumptions = (
@@ -675,6 +705,8 @@ def _wide_scan_inputs(scan_col: WideScanColumn) -> _ScanInputs:
     return _ScanInputs(
         scan_id=scan_col.scan_id,
         elapsed_seconds=scan_col.elapsed_seconds,
+        acquired_at=scan_col.acquisition_timestamp,
+        sample_id=scan_col.sample_id,
         cell=scan_col.cell,
         channel=scan_col.channel,
         wavelength_nm=scan_col.wavelength_nm,

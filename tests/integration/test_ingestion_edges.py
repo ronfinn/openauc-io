@@ -241,3 +241,125 @@ def test_optical_system_by_name_form(tmp_path: Path) -> None:
     data = "scan,radius_cm,signal,optical_system\nA,6.0,0.1,ABSORBANCE\n"
     exp = openauc.load(_experiment(tmp_path, _long(), data))
     assert exp.scans[0].optical_system.value == "absorbance"
+
+
+# --------------------------------------------------------------------------- #
+# Sample-to-scan linkage and acquisition timestamps
+# --------------------------------------------------------------------------- #
+
+_TWO_SAMPLES = {"samples": [{"sample_id": "s1"}, {"sample_id": "s2"}]}
+
+
+def test_long_format_links_scans_from_the_sample_id_column(tmp_path: Path) -> None:
+    data = (
+        "scan,radius_cm,signal,sample_id\n"
+        "A,6.0,0.1,s1\nA,6.1,0.2,s1\nB,6.0,0.3,s2\nB,6.1,0.4,s2\n"
+    )
+    experiment = openauc.load(_experiment(tmp_path, _long(_TWO_SAMPLES), data))
+    assert [s.sample_id for s in experiment.scans] == ["s1", "s2"]
+    assert experiment.validate_structure().is_valid
+
+
+def test_long_format_partial_linkage_leaves_other_scans_unlinked(
+    tmp_path: Path,
+) -> None:
+    data = "scan,radius_cm,signal,sample_id\nA,6.0,0.1,s1\nB,6.0,0.3,\n"
+    experiment = openauc.load(_experiment(tmp_path, _long(_TWO_SAMPLES), data))
+    assert [s.sample_id for s in experiment.scans] == ["s1", None]
+
+
+def test_default_sample_id_applies_to_every_scan(tmp_path: Path) -> None:
+    manifest = _long(
+        {
+            "samples": [{"sample_id": "s1"}],
+            "defaults": {"signal_unit": "AU", "sample_id": "s1"},
+        }
+    )
+    data = "scan,radius_cm,signal\nA,6.0,0.1\nB,6.0,0.3\n"
+    experiment = openauc.load(_experiment(tmp_path, manifest, data))
+    assert [s.sample_id for s in experiment.scans] == ["s1", "s1"]
+
+
+def test_sample_id_column_conflicting_with_default_raises(tmp_path: Path) -> None:
+    manifest = _long(
+        {**_TWO_SAMPLES, "defaults": {"signal_unit": "AU", "sample_id": "s1"}}
+    )
+    data = "scan,radius_cm,signal,sample_id\nA,6.0,0.1,s2\n"
+    with pytest.raises(DataConflictError, match="sample_id"):
+        openauc.load(_experiment(tmp_path, manifest, data))
+
+
+def test_unknown_sample_id_in_data_raises(tmp_path: Path) -> None:
+    data = "scan,radius_cm,signal,sample_id\nA,6.0,0.1,ghost\n"
+    with pytest.raises(ParseError, match="ghost"):
+        openauc.load(_experiment(tmp_path, _long(_TWO_SAMPLES), data))
+
+
+def test_a_single_declared_sample_is_never_linked_implicitly(tmp_path: Path) -> None:
+    manifest = _long({"samples": [{"sample_id": "only"}]})
+    data = "scan,radius_cm,signal\nA,6.0,0.1\nB,6.0,0.3\n"
+    experiment = openauc.load(_experiment(tmp_path, manifest, data))
+    assert [s.sample_id for s in experiment.scans] == [None, None]
+
+
+def test_wide_format_carries_sample_id_and_timestamp(tmp_path: Path) -> None:
+    manifest = {
+        "schema_version": "1.0",
+        "format": "generic-wide",
+        "data_file": "scans.csv",
+        "experiment": {"experiment_id": "wide"},
+        "defaults": {"signal_unit": "AU"},
+        **_TWO_SAMPLES,
+        "columns": {
+            "radius": "r",
+            "scans": [
+                {
+                    "column": "c1",
+                    "scan_id": "a",
+                    "sample_id": "s1",
+                    "acquisition_timestamp": "2026-03-02T09:00:00+01:00",
+                },
+                {
+                    "column": "c2",
+                    "scan_id": "b",
+                    "acquisition_timestamp": "2026-03-02T09:10:00",
+                },
+            ],
+        },
+    }
+    data = "r,c1,c2\n6.0,0.1,0.2\n6.1,0.3,0.4\n"
+    experiment = openauc.load(_experiment(tmp_path, manifest, data))
+    assert [s.sample_id for s in experiment.scans] == ["s1", None]
+    stamps = [s.acquired_at.isoformat() for s in experiment.scans if s.acquired_at]
+    assert stamps == ["2026-03-02T09:00:00+01:00", "2026-03-02T09:10:00"]
+
+
+def test_manifest_acquired_at_reaches_experiment_metadata(tmp_path: Path) -> None:
+    manifest = _long(
+        {"experiment": {"experiment_id": "edge", "acquired_at": "2026-03-02T09:00:00Z"}}
+    )
+    data = "scan,radius_cm,signal\nA,6.0,0.1\n"
+    experiment = openauc.load(_experiment(tmp_path, manifest, data))
+    assert experiment.metadata.acquired_at is not None
+    assert experiment.metadata.acquired_at.isoformat() == "2026-03-02T09:00:00+00:00"
+
+
+def test_long_timestamps_keep_their_offsets_and_are_not_converted(
+    tmp_path: Path,
+) -> None:
+    data = (
+        "scan,radius_cm,signal,acquisition_timestamp\n"
+        "A,6.0,0.1,2026-03-02T09:00:00+05:30\nB,6.0,0.2,2026-03-02T09:00:00\n"
+    )
+    experiment = openauc.load(_experiment(tmp_path, _long(), data))
+    stamps = [s.acquired_at.isoformat() for s in experiment.scans if s.acquired_at]
+    assert stamps == ["2026-03-02T09:00:00+05:30", "2026-03-02T09:00:00"]
+
+
+@pytest.mark.parametrize("value", ["2026-03-02", "20260302"])
+def test_date_only_acquisition_timestamp_is_rejected(
+    tmp_path: Path, value: str
+) -> None:
+    data = f"scan,radius_cm,signal,acquisition_timestamp\nA,6.0,0.1,{value}\n"
+    with pytest.raises(ParseError, match="without a time of day"):
+        openauc.load(_experiment(tmp_path, _long(), data))
