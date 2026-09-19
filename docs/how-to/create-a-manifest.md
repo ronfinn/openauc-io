@@ -53,6 +53,7 @@ A typo fails loudly rather than being ignored.
 | `name` | `str` | no | Display name. |
 | `description` | `str` | no | Free text. |
 | `experiment_type` | `str` | no | `sedimentation_velocity`, `sedimentation_equilibrium`, `other`, `unknown` (default). Drives readiness routing. |
+| `acquired_at` | ISO-8601 date-time | no | When the run was acquired. An offset is preserved; no offset means timezone not stated; a date-only value is rejected. |
 | `operator` | `str` | no | Who ran it. |
 | `notes` | `str` | no | Free text. |
 
@@ -90,13 +91,18 @@ An array. Each entry needs `sample_id`; optionally `description`,
 ]
 ```
 
-!!! note "No sample-to-scan linkage"
-    `ScanMetadata` carries no `sample_id`, so samples are experiment-wide.
+!!! note "Sample links are stated, never inferred"
+    A scan is linked to a sample only by a `sample_id` you supply: once for every
+    scan through `defaults.sample_id`, or per scan (a `sample_id` column in long
+    format, a `sample_id` in a wide `columns` entry). A scan with no stated link
+    stays unlinked, even when only one sample is declared. A `sample_id` that
+    names no declared sample is rejected. See
+    [sample links](../formats/manifest-v1.md#sample-links).
 
 ### `defaults`
 
 Applied where the table does not supply a value: `optical_system`,
-`signal_unit`, `cell`, `channel`, `wavelength_nm`, `rotor_speed_rpm`,
+`signal_unit`, `sample_id`, `cell`, `channel`, `wavelength_nm`, `rotor_speed_rpm`,
 `temperature_c`.
 
 ```json
@@ -119,7 +125,7 @@ Applied where the table does not supply a value: `optical_system`,
 ```
 
 Each entry needs `column` and `scan_id`; optionally `elapsed_seconds`,
-`wavelength_nm`, `optical_system`, `rotor_speed_rpm`, `temperature_c`, `cell`,
+`acquisition_timestamp`, `sample_id`, `wavelength_nm`, `optical_system`, `rotor_speed_rpm`, `temperature_c`, `cell`,
 `channel`, `source_scan_id`.
 
 ### `delimiter`

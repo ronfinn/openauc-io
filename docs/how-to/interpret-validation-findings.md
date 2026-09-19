@@ -32,6 +32,7 @@ wavelengths yields **one** finding listing 200 identifiers, not 200 findings.
 | `duplicate_sample_id` | ARCHIVAL | A, B | Same, for samples. |
 | `scan_count_mismatch` | ARCHIVAL | A, B, C, D | Metadata and observations describe different numbers of scans. |
 | `scan_id_mismatch` | ARCHIVAL | A, B, C, D | Same count, but different identifiers or a different order. |
+| `scan_sample_unresolved` | STRUCTURAL | B, C, D | A scan names a `sample_id` the experiment does not declare. Declare the sample or correct the id. Scans naming no sample are never reported. |
 | `no_scans` | STRUCTURAL | B, C, D | Nothing to inspect. Not archival-blocking — an empty set is storable. |
 | `non_physical_radius` | STRUCTURAL | B, C, D | A radius ≤ 0. Correct the axis or drop the points. |
 | `optical_signal_unit_conflict` | STRUCTURAL | B, C, D | e.g. an absorbance scan with a `fringe` signal unit. Correct one of them. |

@@ -36,9 +36,18 @@ Seven were raised at the outset. All seven are resolved:
 | Q6 — Documentation tooling | **Resolved**: MkDocs Material — this site |
 | Q7 — CLI command surface | **Resolved**: six commands with documented exit codes |
 
+## Delivered after 0.1.0a1 (unreleased)
+
+- Sample-to-scan linkage: an optional `sample_id` on `ScanMetadata`, the
+  `scan_sample_unresolved` structural finding, and manifest support for
+  `defaults.sample_id`.
+- Acquisition times in the manifest (`experiment.acquired_at`, wide-format
+  `acquisition_timestamp`) with strict timestamp parsing.
+- AUCX format version 1.1 (reads 1.0 and 1.1).
+
 ## Next milestone
 
-None is committed. The first public alpha has been taken — `0.1.0a1` is tagged,
+None is committed beyond the above. The first public alpha has been taken — `0.1.0a1` is tagged,
 released and on PyPI — and no successor version has been selected, scheduled or
 promised. What comes next will be chosen from the candidates below, and this
 section will say so once it is.
@@ -48,9 +57,7 @@ section will say so once it is.
 - Vendor-format readers. Each needs a **documented, non-reverse-engineered**
   specification before any parsing code is written. See
   [Scientific boundaries](../concepts/scientific-boundaries.md).
-- Sample-to-scan linkage (`sample_id` on `ScanMetadata`).
 - Heterogeneous per-scan signal units.
-- An `acquired_at` field in the manifest schema.
 - Third-party parser discovery through entry points.
 
 ## Never

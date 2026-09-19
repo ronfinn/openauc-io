@@ -23,10 +23,15 @@ non-goals](../concepts/scientific-boundaries.md).
 - **One signal unit per observation set.** Heterogeneous per-scan signal units
   are not modelled, which is why more than one declared optical system is
   reported as an anomaly.
-- **No sample-to-scan linkage.** `ScanMetadata` carries no `sample_id`, so
-  sample metadata is assessed experiment-wide only.
-- `ExperimentMetadata.acquired_at` is always `None` on import — the manifest
-  schema has no such field.
+- **Sample metadata checks are experiment-wide.** A scan can state its
+  `sample_id`, but the readiness and sample-field checks do not yet use the link.
+  Links are never inferred, so scans whose source did not state one stay
+  unlinked.
+- **Acquisition times need a time of day.** A date-only value is rejected, since
+  the model cannot represent date precision and padding would invent a time.
+  A timestamp with no offset is kept timezone-naive ("not stated"); mixed naive
+  and offset-aware timestamps are stored as given and are not ordered or
+  compared.
 - No unit conversion anywhere.
 - `optical_systems()` includes the instrument's declared system, so a set with
   a declared scan system and an undeclared instrument renders as

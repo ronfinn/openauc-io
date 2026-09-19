@@ -95,6 +95,7 @@ Codes are stable. "Blocks" lists the tiers a finding prevents.
 
 | Code | Severity | Blocks | Why |
 |------|----------|--------|-----|
+| `scan_sample_unresolved` | ERROR | B, C, D | A scan's `sample_id` matches no declared sample: a contradiction. Absent linkage is allowed and never reported. |
 | `no_scans` | ERROR | B, C, D | Nothing to inspect. Not archival-blocking: an empty set is storable. |
 | `non_physical_radius` | ERROR | B, C, D | A radius ≤ 0 is not a representable radial position. |
 | `optical_signal_unit_conflict` | ERROR | B, C, D | A defined contradiction, e.g. absorbance with fringes. |

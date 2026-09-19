@@ -33,8 +33,8 @@ One row per radial observation.
 
 **Required columns:** `scan`, `radius_cm`, `signal`.
 
-**Optional columns:** `elapsed_seconds`, `acquisition_timestamp`, `cell`,
-`channel`, `wavelength_nm`, `optical_system`, `signal_unit`, `rotor_speed_rpm`,
+**Optional columns:** `elapsed_seconds`, `acquisition_timestamp`, `sample_id`,
+`cell`, `channel`, `wavelength_nm`, `optical_system`, `signal_unit`, `rotor_speed_rpm`,
 `temperature_c`, `source_scan_id`.
 
 ```csv
@@ -57,6 +57,12 @@ Rules:
 - Non-finite or non-numeric `radius_cm`/`signal` is a `ParseError`.
 - A per-scan optional column with inconsistent values within one scan is a
   `DataConflictError`.
+- `sample_id` links a scan to a sample declared in the manifest `samples`. An
+  undeclared value is a `ParseError`; an empty value leaves the scan unlinked. No
+  link is ever inferred. See [sample links](manifest-v1.md#sample-links).
+- `acquisition_timestamp` must be an ISO-8601 date-time. An offset is preserved,
+  no offset is kept as timezone-unspecified, and a date-only value is a
+  `ParseError`. See [acquisition timestamps](manifest-v1.md#acquisition-timestamps).
 - Optional scan metadata may come from the table or the manifest defaults; if
   both supply it and they differ, that is a `DataConflictError` (never silently
   resolved).
