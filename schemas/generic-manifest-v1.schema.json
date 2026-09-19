@@ -62,6 +62,18 @@
           "default": null,
           "title": "Rotor Speed Rpm"
         },
+        "sample_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sample Id"
+        },
         "signal_unit": {
           "anyOf": [
             {
@@ -106,6 +118,19 @@
       "additionalProperties": false,
       "description": "Experiment identity, mirroring the canonical experiment metadata.",
       "properties": {
+        "acquired_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Acquired At"
+        },
         "description": {
           "anyOf": [
             {
@@ -458,6 +483,19 @@
       "additionalProperties": false,
       "description": "Maps one wide-format signal column to a scan and its metadata.",
       "properties": {
+        "acquisition_timestamp": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Acquisition Timestamp"
+        },
         "cell": {
           "anyOf": [
             {
@@ -520,6 +558,18 @@
           ],
           "default": null,
           "title": "Rotor Speed Rpm"
+        },
+        "sample_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sample Id"
         },
         "scan_id": {
           "title": "Scan Id",
@@ -597,6 +647,7 @@
         "channel": null,
         "optical_system": null,
         "rotor_speed_rpm": null,
+        "sample_id": null,
         "signal_unit": null,
         "temperature_c": null,
         "wavelength_nm": null

@@ -14,7 +14,7 @@ values. A field is either read from the model or counted.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -319,7 +319,7 @@ def _presence(
 
 
 def _string_presence(
-    component: str, field: str, values: list[str | None]
+    component: str, field: str, values: Sequence[object | None]
 ) -> MetadataPresence:
     present = sum(1 for value in values if value is not None)
     return MetadataPresence(
@@ -359,6 +359,12 @@ def summarise_experiment(experiment: AUCExperiment) -> ExperimentSummary:
     presence.append(_string_presence("scan", "cell", [scan.cell for scan in scans]))
     presence.append(
         _string_presence("scan", "channel", [scan.channel for scan in scans])
+    )
+    presence.append(
+        _string_presence("scan", "sample_id", [scan.sample_id for scan in scans])
+    )
+    presence.append(
+        _string_presence("scan", "acquired_at", [scan.acquired_at for scan in scans])
     )
     presence.extend(
         _presence("sample", field, [accessor(sample) for sample in experiment.samples])

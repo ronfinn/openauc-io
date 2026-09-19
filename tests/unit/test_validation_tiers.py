@@ -519,3 +519,75 @@ def test_readiness_findings_never_use_error_severity() -> None:
     for issue in experiment.validate().issues:
         if set(issue.tiers).issubset(readiness_tiers):
             assert issue.severity is not ValidationSeverity.ERROR
+
+
+# --------------------------------------------------------------------------- #
+# Sample-to-scan linkage
+# --------------------------------------------------------------------------- #
+
+
+def _linked_scan(scan_id: str, index: int, sample_id: str | None) -> ScanMetadata:
+    return _scan(scan_id, index).model_copy(update={"sample_id": sample_id})
+
+
+def test_scan_sample_id_defaults_to_none_and_rejects_blank() -> None:
+    assert _scan("a", 0).sample_id is None
+    with pytest.raises(ValueError, match="sample_id"):
+        ScanMetadata(
+            scan_id="a",
+            index=0,
+            elapsed_time=Quantity.missing(),
+            sample_id="  ",
+        )
+
+
+def test_resolved_sample_links_raise_no_finding() -> None:
+    experiment = _experiment(
+        scans=(_linked_scan("a", 0, "s1"), _linked_scan("b", 1, "s2")),
+        samples=(SampleMetadata(sample_id="s1"), SampleMetadata(sample_id="s2")),
+    )
+    assert experiment.validate().by_code("scan_sample_unresolved") == ()
+    assert experiment.validate_structure().is_valid
+
+
+def test_unresolved_sample_is_a_structural_error_blocking_readiness() -> None:
+    experiment = _experiment(
+        scans=(_linked_scan("b", 0, "ghost"), _linked_scan("a", 1, "s1")),
+        observations=_shared(["b", "a"]),
+        samples=(SampleMetadata(sample_id="s1"),),
+    )
+    report = experiment.validate()
+    (issue,) = report.by_code("scan_sample_unresolved")
+    assert issue.severity is ValidationSeverity.ERROR
+    assert issue.scan_ids == ("b",)
+    assert issue.tiers == (ValidationTier.STRUCTURAL,)
+    for tier in (
+        ValidationTier.STRUCTURAL,
+        ValidationTier.SV_READINESS,
+        ValidationTier.SE_READINESS,
+    ):
+        assert issue.blocks_tier(tier)
+    assert not issue.blocks_tier(ValidationTier.ARCHIVAL)
+    assert not experiment.validate_structure().is_valid
+
+
+def test_link_with_no_declared_samples_is_unresolved() -> None:
+    experiment = _experiment(scans=(_linked_scan("a", 0, "s1"), _scan("b", 1)))
+    (issue,) = experiment.validate().by_code("scan_sample_unresolved")
+    assert issue.scan_ids == ("a",)
+
+
+def test_missing_linkage_is_allowed_and_never_inferred() -> None:
+    experiment = _experiment(samples=(SampleMetadata(sample_id="only"),))
+    assert experiment.validate().by_code("scan_sample_unresolved") == ()
+    assert experiment.validate_structure().is_valid
+    assert all(scan.sample_id is None for scan in experiment.scans)
+
+
+def test_sample_id_survives_dict_round_trip() -> None:
+    experiment = _experiment(
+        scans=(_linked_scan("a", 0, "s1"), _scan("b", 1)),
+        samples=(SampleMetadata(sample_id="s1"),),
+    )
+    restored = AUCExperiment.from_dict(experiment.to_dict())
+    assert [s.sample_id for s in restored.scans] == ["s1", None]

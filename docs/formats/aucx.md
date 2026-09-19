@@ -13,9 +13,16 @@ restored = openauc.load("experiment.aucx")  # read back
 assert restored.to_dict() == experiment.to_dict()
 ```
 
-Current format version: **1.0**. Only 1.0 is read. An archive declaring any
-other version is rejected with `ArchiveVersionError` — **archives are never
-silently migrated**.
+Current format version: **1.1**. Versions **1.0** and **1.1** are read; an
+archive declaring any other version is rejected with `ArchiveVersionError` —
+**archives are never silently migrated**.
+
+Version 1.1 adds one optional key to each scan record in `experiment.json`,
+`sample_id` (see [sample links](../concepts/data-model.md#sample-links-and-acquisition-time)).
+A 1.0 archive has no such key and reads with `sample_id=None` — "not stated",
+which is exactly what it means. Everything else is unchanged: parts, checksums,
+determinism, the mask and the radius-axis modes. A reader that only knows 1.0
+refuses a 1.1 archive with `ArchiveVersionError` rather than misreading it.
 
 ## Structure
 
@@ -184,7 +191,7 @@ structurally consistent, and nothing at all about scientific suitability.
 `ArchiveIntegrityError` and `ArchiveVersionError` are subclasses of
 `ArchiveError`, so catching the base class catches all three.
 
-## Not included in version 1.0
+## Not included in version 1.1
 
 Compression tuning, partial or streaming reads, multi-experiment archives,
 embedded plots or derived data, encryption and signatures. Signatures in

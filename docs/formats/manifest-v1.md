@@ -52,6 +52,42 @@ documented `extension` object.
 **conflicts** with a value supplied in the table is an error
 (`DataConflictError`), never a silent override.
 
+## Sample links
+
+`samples` declares the samples; a scan is linked to one by its `sample_id`. The
+link is stated, never inferred. It can come from:
+
+- `defaults.sample_id` — the author states once that every scan measured that
+  sample;
+- a per-scan `sample_id` (a data-table column in long format, or a `columns`
+  entry in wide format).
+
+A `sample_id` that names no declared sample is rejected: in `defaults` or in a
+wide `columns` entry as a `ManifestError`, in a long-format data column as a
+`ParseError`. A data value that differs from `defaults.sample_id` is a
+`DataConflictError`. **A scan with no stated link stays unlinked, even when the
+manifest declares only one sample.**
+
+## Acquisition timestamps
+
+`experiment.acquired_at` (when the run was acquired) and, per scan,
+`acquisition_timestamp` (wide `columns` entries, or the long-format data column)
+take an ISO-8601 **date-time**:
+
+- an explicit UTC offset (`2026-03-02T09:30:00+01:00`, or `Z`) is preserved
+  exactly and never converted;
+- a timestamp with no offset is accepted and kept **timezone-naive**, meaning
+  "timezone not stated"; no zone is assumed;
+- a date without a time of day (`2026-03-02`), a number (such as epoch seconds)
+  or any other text is rejected — a time is never invented, for example by
+  padding to midnight.
+
+In YAML, quote a value or write a full date-time; an unquoted bare date is
+rejected. The experiment time and the scan times are separate facts: neither is
+derived from the other, or from `elapsed_seconds`. There is no timestamp
+default, since one time for every scan is not a meaningful fact. Acquisition
+time is distinct from the import time recorded in provenance.
+
 ## Missing vs unknown
 
 Absent optional fields stay absent (`None`); the model does not invent values.
@@ -73,8 +109,9 @@ not-applicable, that distinction is preserved (for example, a scan with no
 ```
 
 Each entry maps a signal column to a scan id and optional per-scan metadata
-(`elapsed_seconds`, `wavelength_nm`, `optical_system`, `rotor_speed_rpm`,
-`temperature_c`, `cell`, `channel`, `source_scan_id`).
+(`elapsed_seconds`, `acquisition_timestamp`, `sample_id`, `wavelength_nm`,
+`optical_system`, `rotor_speed_rpm`, `temperature_c`, `cell`, `channel`,
+`source_scan_id`).
 
 ## Instrument and sample metadata
 

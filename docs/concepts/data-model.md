@@ -57,12 +57,29 @@ assert report.is_valid
 | Experiment identity | `ExperimentMetadata` | `experiment_id` |
 | Instrument & run | `InstrumentMetadata` | none (all optional) |
 | Sample | `SampleMetadata` | `sample_id` |
-| Scan | `ScanMetadata` | `scan_id`, `index`, `elapsed_time` |
+| Scan | `ScanMetadata` | `scan_id`, `index`, `elapsed_time` (`sample_id`, `acquired_at` optional) |
 | Observations | `Observations` | radius/signal arrays + `scan_ids` |
 | Provenance | `ImportProvenance` | none (all optional) |
 
 Nominal rotor speed lives on the instrument; the *actual* per-scan speed and
 temperature live on each `ScanMetadata`.
+
+## Sample links and acquisition time
+
+`ScanMetadata.sample_id` optionally names the sample a scan measured, matching a
+`SampleMetadata.sample_id` in the same experiment. It records what the source
+stated: `None` means "not stated", and a link is **never inferred** from
+concentration, optical system, scan order or the number of declared samples —
+not even when there is exactly one. A `sample_id` naming no declared sample is
+the structural error `scan_sample_unresolved`; an unlinked scan is allowed.
+
+Acquisition time is held at two levels, as two distinct facts:
+`ExperimentMetadata.acquired_at` (the run) and `ScanMetadata.acquired_at` (one
+scan). Neither is derived from the other or from `elapsed_time`. Both are
+`datetime` values. An explicit UTC offset is preserved exactly; a value with no
+offset is **timezone-naive**, meaning "timezone not stated". Nothing is
+converted to another zone. Acquisition time is unrelated to
+`ImportProvenance.imported_at` or an archive's export time.
 
 ## Radius axes: shared and per-scan
 

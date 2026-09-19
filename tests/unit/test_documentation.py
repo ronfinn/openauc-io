@@ -16,6 +16,7 @@ import pytest
 import yaml
 
 import openauc
+from openauc.formats.aucx import AUCX_FORMAT_VERSION
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
@@ -270,7 +271,7 @@ def test_the_documented_aucx_round_trip_holds(tmp_path: Path) -> None:
     experiment = openauc.load(ROOT / "examples" / "data" / "demo_experiment")
     archive = experiment.export(tmp_path / "demo.aucx")
     info = openauc.inspect_aucx(archive)
-    assert info.aucx_format_version == "1.0"
+    assert info.aucx_format_version == AUCX_FORMAT_VERSION
     assert info.checksum_verified
     assert openauc.validate_aucx(archive).is_valid
     assert openauc.load(archive).to_dict() == experiment.to_dict()

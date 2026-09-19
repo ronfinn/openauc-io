@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optional `ScanMetadata.sample_id`, linking a scan to a declared sample exactly
+  as the source states it. Links are never inferred, including when only one
+  sample is declared.
+- Structural finding `scan_sample_unresolved` (ERROR; blocks the structural and
+  both readiness tiers) for a scan naming an undeclared sample.
+- Manifest fields `experiment.acquired_at`, `defaults.sample_id`, and per-scan
+  `sample_id` and `acquisition_timestamp` in wide-format `columns`; a
+  `sample_id` column in the generic long format. The manifest `schema_version`
+  remains `"1.0"`.
+- Structured summary presence counts for `scan.sample_id` and
+  `scan.acquired_at`.
+
+### Changed
+
+- AUCX format version is now **1.1** (per-scan `sample_id`). Version 1.0
+  archives remain readable; older readers reject 1.1 archives with
+  `ArchiveVersionError`.
+- Acquisition timestamps are parsed strictly; offsets are preserved and
+  offset-less values stay timezone-naive.
+
+### Fixed
+
+- A date-only `acquisition_timestamp` was silently read as midnight. It is now
+  rejected with a `ParseError`, since the time of day was never supplied.
+
 ## [0.1.0a1] - 2026-08-13
 
 First internally coherent alpha: the canonical data model, generic delimited

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from openauc.exceptions import ManifestError
-from openauc.formats.manifest import GenericManifest, load_manifest
+from openauc.formats.manifest import GenericManifest, load_manifest, parse_timestamp
 
 
 def _write(path: Path, payload: dict[str, object]) -> Path:
@@ -108,3 +108,71 @@ def test_notes_are_retained(tmp_path: Path) -> None:
 def test_model_schema_has_expected_required_fields() -> None:
     schema = GenericManifest.model_json_schema()
     assert set(schema["required"]) == {"schema_version", "data_file", "experiment"}
+
+
+# --------------------------------------------------------------------------- #
+# Acquisition timestamps and sample references
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    ("text", "iso"),
+    [
+        ("2026-03-02T09:30:00+01:00", "2026-03-02T09:30:00+01:00"),
+        ("2026-03-02T09:30:00", "2026-03-02T09:30:00"),
+        ("2026-03-02 09:30:00", "2026-03-02T09:30:00"),
+        ("2026-03-02T09:30:00Z", "2026-03-02T09:30:00+00:00"),
+    ],
+)
+def test_timestamp_is_preserved_without_conversion(text: str, iso: str) -> None:
+    parsed = parse_timestamp(text)
+    assert parsed.isoformat() == iso
+    assert (parsed.tzinfo is None) == ("+" not in iso)
+
+
+@pytest.mark.parametrize(
+    "bad", ["2026-03-02", "20260302", "not-a-date", "", 1772440200, 1.5, True]
+)
+def test_timestamp_rejects_dates_numbers_and_garbage(bad: object) -> None:
+    with pytest.raises(ValueError):
+        parse_timestamp(bad)
+
+
+def test_yaml_datetime_is_accepted_and_yaml_date_is_rejected(tmp_path: Path) -> None:
+    body = (
+        'schema_version: "1.0"\ndata_file: scans.csv\nexperiment:\n'
+        "  experiment_id: e\n  acquired_at: %s\n"
+    )
+    ok = tmp_path / "ok.yaml"
+    ok.write_text(body % "2026-03-02T10:00:00+01:00", encoding="utf-8")
+    acquired = load_manifest(ok).experiment.acquired_at
+    assert acquired is not None
+    assert acquired.isoformat() == "2026-03-02T10:00:00+01:00"
+    bad = tmp_path / "bad.yaml"
+    bad.write_text(body % "2026-03-02", encoding="utf-8")
+    with pytest.raises(ManifestError, match="without a time of day"):
+        load_manifest(bad)
+
+
+def test_manifest_experiment_acquired_at_defaults_to_none(tmp_path: Path) -> None:
+    manifest = load_manifest(_write(tmp_path / "m.json", _valid_payload()))
+    assert manifest.experiment.acquired_at is None
+
+
+def test_default_sample_id_must_be_declared(tmp_path: Path) -> None:
+    payload = _valid_payload()
+    payload["defaults"] = {"sample_id": "ghost"}
+    with pytest.raises(ManifestError, match=r"defaults\.sample_id"):
+        load_manifest(_write(tmp_path / "m.json", payload))
+    payload["samples"] = [{"sample_id": "ghost"}]
+    assert load_manifest(_write(tmp_path / "m.json", payload)).defaults.sample_id
+
+
+def test_wide_column_sample_id_must_be_declared(tmp_path: Path) -> None:
+    payload = _valid_payload()
+    payload["columns"] = {
+        "radius": "r",
+        "scans": [{"column": "c1", "scan_id": "a", "sample_id": "ghost"}],
+    }
+    with pytest.raises(ManifestError, match="ghost"):
+        load_manifest(_write(tmp_path / "m.json", payload))

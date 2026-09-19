@@ -185,3 +185,30 @@ replaces the destination, so a failure never leaves a partial archive.
 is rejected with `ArchiveVersionError`. **Archives are never silently migrated**;
 a future version that can read 1.0 will do so through an explicit, documented
 path.
+
+---
+
+## Amendment — Format version 1.1 (2026-09-19)
+
+`aucx_format_version` becomes **`"1.1"`**. The only change is one optional key,
+`sample_id`, on each scan record in `experiment.json` (ADR-0002, sample-to-scan
+linkage).
+
+**Why a version change.** All metadata models forbid unknown keys, so a reader
+built for 1.0 cannot rebuild a scan that carries `sample_id`. Keeping the label
+`1.0` would make such an archive claim a version whose readers reject it, with
+an error that does not mention the version. Declaring 1.1 makes that refusal an
+explicit `ArchiveVersionError`.
+
+**Reading policy.** A reader accepts exactly the versions it lists: this build
+reads `1.0` and `1.1`. A 1.0 archive has no `sample_id` and reads with `None`,
+which is what "not stated" means, so no conversion of any kind is applied.
+Anything else is still rejected, and archives are never silently migrated. No
+general migration mechanism is introduced; the reader version list is the whole
+policy. The writer always emits 1.1.
+
+**Unchanged.** Part layout, checksum verification before any model is built,
+deterministic output, provenance separation, and the shared/per-scan radius and
+mask semantics. `acquired_at` was already part of 1.0 and needed no change. A
+committed archive written by the 0.1.0a1 writer
+(`tests/fixtures/aucx/v1_0_example.aucx`) is read by a regression test.

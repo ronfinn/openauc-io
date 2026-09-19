@@ -253,3 +253,36 @@ sample-to-scan linkage** (`ScanMetadata` carries no `sample_id`), so sample
 metadata can only be assessed experiment-wide; and an `Observations` set still
 carries a **single signal unit**, which is why more than one declared optical
 system in one set is reported as an anomaly.
+
+---
+
+## Amendment — Sample-to-scan linkage and acquisition timestamps (2026-09-19)
+
+This resolves the first deferred limitation recorded in the Phase 4 amendment
+and settles the timestamp policy.
+
+**Linkage.** `ScanMetadata` gains an optional `sample_id: str | None`, a plain
+string equal to a `SampleMetadata.sample_id` in the same experiment. It records
+what the source stated. `None` means "not stated", and a link is **never
+inferred** — not from concentration, optical system, scan order, or the presence
+of a single declared sample. The only convenience is an explicit
+`defaults.sample_id` in a manifest, where the author states the link once.
+
+**Blocking set.** One condition joins the STRUCTURAL blocking set:
+`scan_sample_unresolved` (ERROR; blocks STRUCTURAL, SV and SE readiness) for a
+scan naming a sample the experiment does not declare — including any link when
+no samples are declared. It is not ARCHIVAL: an archive stores the contradiction
+unchanged and unambiguously. Missing linkage is allowed and produces no finding,
+so the "sparse metadata stays valid" principle of the Phase 4 amendment holds.
+Readiness checks do not change; per-sample assessment through the link remains
+deferred.
+
+**Timestamps.** `acquired_at` already existed at experiment and scan level and
+represents two distinct facts; neither is derived from the other or from
+`elapsed_time`, and no new field is added. Manifest input is parsed by one strict
+function: ISO-8601 date-times only. An explicit UTC offset is preserved without
+conversion; a value with no offset is kept timezone-naive, meaning "timezone not
+stated". Date-only values and numbers are rejected rather than padded (midnight)
+or interpreted (epoch), because either would supply information the source did
+not. This corrects earlier behaviour in which a date-only
+`acquisition_timestamp` was silently read as midnight.

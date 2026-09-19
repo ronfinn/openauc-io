@@ -10,7 +10,7 @@ import hashlib
 import io
 import json
 import zipfile
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -841,3 +841,81 @@ def test_an_invalid_radius_mode_is_rejected(tmp_path: Path) -> None:
     )
     with pytest.raises(ArchiveError):
         read_aucx(broken)
+
+
+# --------------------------------------------------------------------------- #
+# Historical archives
+# --------------------------------------------------------------------------- #
+
+_V1_0_FIXTURE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "aucx" / "v1_0_example.aucx"
+)
+
+
+def test_historical_1_0_archive_stays_readable() -> None:
+    assert validate_aucx(_V1_0_FIXTURE).is_valid
+    assert inspect_aucx(_V1_0_FIXTURE).aucx_format_version == "1.0"
+    experiment = read_aucx(_V1_0_FIXTURE)
+    assert experiment.metadata.experiment_id == "fixture-v1-0"
+    assert [s.scan_id for s in experiment.scans] == ["a", "b"]
+    assert experiment.observations.mode is RadiusAxisMode.SHARED
+    assert experiment.metadata.acquired_at is not None
+    assert experiment.metadata.acquired_at.isoformat() == "2026-03-02T09:00:00+01:00"
+    stamps = [s.acquired_at.isoformat() for s in experiment.scans if s.acquired_at]
+    assert stamps == ["2026-03-02T09:00:05+01:00", "2026-03-02T09:10:05"]
+
+
+def test_writer_emits_1_1_and_reader_accepts_1_0_and_1_1(tmp_path: Path) -> None:
+    assert AUCX_FORMAT_VERSION == "1.1"
+    info = inspect_aucx(_export(_shared_experiment(), tmp_path))
+    assert info.aucx_format_version == "1.1"
+    assert info.export.aucx_format_version == "1.1"
+    assert inspect_aucx(_V1_0_FIXTURE).aucx_format_version == "1.0"
+
+
+def test_sample_links_and_timestamps_round_trip_exactly(tmp_path: Path) -> None:
+    tz = timezone(timedelta(hours=-5))
+    base = _shared_experiment()
+    scans = (
+        base.scans[0].model_copy(
+            update={
+                "sample_id": "s1",
+                "acquired_at": datetime(2026, 3, 2, 9, 0, 0, tzinfo=tz),
+            }
+        ),
+        base.scans[1].model_copy(update={"acquired_at": datetime(2026, 3, 2, 9, 10)}),
+    )
+    original = AUCExperiment(
+        metadata=base.metadata.model_copy(
+            update={"acquired_at": datetime(2026, 3, 2, 8, 55, tzinfo=UTC)}
+        ),
+        scans=scans,
+        observations=base.observations,
+        samples=base.samples,
+        instrument=base.instrument,
+        provenance=base.provenance,
+    )
+    restored = read_aucx(_export(original, tmp_path))
+    assert [s.sample_id for s in restored.scans] == ["s1", None]
+    # Aware datetimes compare equal across offsets, so compare the text.
+    assert [s.acquired_at.isoformat() for s in restored.scans if s.acquired_at] == [
+        "2026-03-02T09:00:00-05:00",
+        "2026-03-02T09:10:00",
+    ]
+    assert restored.metadata.acquired_at is not None
+    assert restored.metadata.acquired_at.isoformat() == "2026-03-02T08:55:00+00:00"
+    assert restored.to_dict() == original.to_dict()
+    assert restored.validate_structure().is_valid
+
+
+def test_export_of_a_linked_experiment_is_deterministic(tmp_path: Path) -> None:
+    base = _shared_experiment()
+    linked = AUCExperiment(
+        metadata=base.metadata,
+        scans=(base.scans[0].model_copy(update={"sample_id": "s1"}), base.scans[1]),
+        observations=base.observations,
+        samples=base.samples,
+    )
+    first = _export(linked, tmp_path, "one.aucx").read_bytes()
+    second = _export(linked, tmp_path, "two.aucx").read_bytes()
+    assert first == second
