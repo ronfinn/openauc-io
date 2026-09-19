@@ -162,7 +162,7 @@ def test_manifest_experiment_acquired_at_defaults_to_none(tmp_path: Path) -> Non
 def test_default_sample_id_must_be_declared(tmp_path: Path) -> None:
     payload = _valid_payload()
     payload["defaults"] = {"sample_id": "ghost"}
-    with pytest.raises(ManifestError, match="defaults.sample_id"):
+    with pytest.raises(ManifestError, match=r"defaults\.sample_id"):
         load_manifest(_write(tmp_path / "m.json", payload))
     payload["samples"] = [{"sample_id": "ghost"}]
     assert load_manifest(_write(tmp_path / "m.json", payload)).defaults.sample_id

@@ -75,7 +75,11 @@ __all__ = [
 ]
 
 AUCX_FORMAT_ID = "aucx"
-AUCX_FORMAT_VERSION = "1.0"
+#: The version this build writes. 1.1 added the optional per-scan ``sample_id``;
+#: 1.0 archives carry no such key and read with ``sample_id=None``.
+AUCX_FORMAT_VERSION = "1.1"
+#: Every version this build reads. Archives are never migrated silently.
+AUCX_READABLE_VERSIONS = ("1.0", "1.1")
 AUCX_SUFFIX = ".aucx"
 
 MANIFEST_MEMBER = "manifest.json"
@@ -597,11 +601,11 @@ def _require_version(manifest: dict[str, Any], path: Path) -> str:
         raise ArchiveVersionError(
             f"{path.name}: manifest does not declare aucx_format_version"
         )
-    if declared != AUCX_FORMAT_VERSION:
+    if declared not in AUCX_READABLE_VERSIONS:
         raise ArchiveVersionError(
             f"{path.name}: unsupported AUCX format version {declared!r}; "
-            f"this build reads {AUCX_FORMAT_VERSION!r} only. Archives are never "
-            "migrated silently."
+            f"this build reads {', '.join(map(repr, AUCX_READABLE_VERSIONS))} "
+            "only. Archives are never migrated silently."
         )
     return declared
 

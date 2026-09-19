@@ -13,6 +13,7 @@ from openauc.formats import generic_delimited as _generic_delimited  # noqa: F40
 from openauc.formats.aucx import (
     AUCX_FORMAT_ID,
     AUCX_FORMAT_VERSION,
+    AUCX_READABLE_VERSIONS,
     AUCX_SUFFIX,
     ArchiveValidationReport,
     AUCXExport,
@@ -48,7 +49,8 @@ register_archive_format(
         suffixes=(AUCX_SUFFIX,),
         layouts=("zip-of-parts (JSON metadata + NumPy .npy arrays)",),
         limitations=(
-            f"format version {AUCX_FORMAT_VERSION} only; archives are never "
+            f"writes format version {AUCX_FORMAT_VERSION}, reads "
+            f"{' and '.join(AUCX_READABLE_VERSIONS)}; archives are never "
             "migrated silently",
             "every checksum is verified before a model is built",
             "checksums establish integrity, not authenticity",
