@@ -326,3 +326,29 @@ def test_summary_makes_no_scientific_claim() -> None:
     assert "suitable for analysis" not in text.replace("suitability for analysis", "")
     for forbidden in ("scientifically valid", "quality score", "sedimentation coeff"):
         assert forbidden not in text
+
+
+def test_scan_sample_and_timestamp_presence_are_counted() -> None:
+    from datetime import UTC, datetime
+
+    experiment = _shared_experiment()
+    scans = (
+        experiment.scans[0].model_copy(
+            update={
+                "sample_id": "s1",
+                "acquired_at": datetime(2026, 1, 1, tzinfo=UTC),
+            }
+        ),
+        experiment.scans[1],
+    )
+    summary = AUCExperiment(
+        metadata=experiment.metadata,
+        scans=scans,
+        observations=experiment.observations,
+        samples=experiment.samples,
+    ).summary_data()
+    presence = {(e.component, e.field): e for e in summary.metadata_presence}
+    assert presence[("scan", "sample_id")].present == 1
+    assert presence[("scan", "sample_id")].absent == 1
+    assert presence[("scan", "acquired_at")].present == 1
+    assert presence[("scan", "acquired_at")].absent == 1

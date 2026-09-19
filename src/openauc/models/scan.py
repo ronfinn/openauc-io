@@ -3,7 +3,9 @@
 One :class:`ScanMetadata` describes a single radial acquisition. It carries a
 stable identifier and index, the elapsed time, and optional per-scan acquisition
 conditions (the *actual* rotor speed and temperature at the time of the scan, as
-distinct from the instrument's nominal speed). The observational arrays
+distinct from the instrument's nominal speed). An optional ``sample_id`` names
+the sample the scan measured, exactly as the source stated it; it is never
+inferred. The observational arrays
 themselves live in :class:`~openauc.models.observations.Observations`, keyed by
 ``scan_id``.
 """
@@ -29,6 +31,7 @@ class ScanMetadata(BaseModel):
     index: int = Field(ge=0)
     elapsed_time: Quantity
     acquired_at: datetime | None = None
+    sample_id: str | None = None
     cell: str | None = None
     channel: str | None = None
     wavelength: Quantity | None = None
@@ -43,6 +46,13 @@ class ScanMetadata(BaseModel):
     def _non_empty_id(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("scan_id must be a non-empty string")
+        return value
+
+    @field_validator("sample_id")
+    @classmethod
+    def _non_empty_sample_id(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("sample_id must be a non-empty string when given")
         return value
 
     @field_validator("elapsed_time")

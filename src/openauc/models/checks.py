@@ -267,6 +267,46 @@ def check_scan_observation_correspondence(
     return []
 
 
+def check_scan_sample_unresolved(experiment: AUCExperiment) -> list[ValidationIssue]:
+    """A scan naming a sample the experiment does not declare is a contradiction.
+
+    Scans that name no sample are never reported here: absent linkage is
+    allowed, and no link is ever inferred.
+    """
+    known = {sample.sample_id for sample in experiment.samples}
+    unresolved = [
+        scan.scan_id
+        for scan in experiment.scans
+        if scan.sample_id is not None and scan.sample_id not in known
+    ]
+    if not unresolved:
+        return []
+    named = sorted(
+        {
+            scan.sample_id
+            for scan in experiment.scans
+            if scan.sample_id is not None and scan.sample_id not in known
+        }
+    )
+    return [
+        _aggregate(
+            code="scan_sample_unresolved",
+            message=(
+                f"{len(unresolved)} scan(s) reference a sample that the "
+                f"experiment does not declare: {named}"
+            ),
+            severity=_ERROR,
+            tiers=(_STRUCTURAL,),
+            blocks=(_STRUCTURAL, _SV, _SE),
+            subjects=unresolved,
+            observed=f"sample_id(s) {named}; declared samples {sorted(known)}",
+            expected="every scan sample_id matches a declared sample",
+            remediation="declare the sample, or correct the scan's sample_id",
+            component="scan.sample_id",
+        )
+    ]
+
+
 # --------------------------------------------------------------------------- #
 # STRUCTURAL tier — internal consistency and inspectability
 # --------------------------------------------------------------------------- #
@@ -939,6 +979,7 @@ CHECKS: tuple[Check, ...] = (
     check_duplicate_sample_ids,
     check_no_scans,
     check_scan_observation_correspondence,
+    check_scan_sample_unresolved,
     check_non_physical_radius,
     check_optical_signal_unit_conflict,
     check_empty_scans,
