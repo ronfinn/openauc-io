@@ -6,7 +6,8 @@ vendor-specific conventions — into the canonical
 `generic-long` and `generic-wide`. A [manifest](manifest-v1.md) supplies
 experiment identity and metadata.
 
-> This is **not** a vendor format reader. Beckman XL-A/XL-I, Optima AUC, OpenAUC,
+> This is **not** a vendor format reader (see [Beckman `.ip1`](ip1.md) for the one
+> narrow vendor layout that is read). Beckman XL-A/XL-I, Optima AUC, OpenAUC,
 > SEDFIT/SEDPHAT native files and AUCX archives are **not** supported here; they
 > remain future parser plugins.
 

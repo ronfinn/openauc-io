@@ -14,8 +14,9 @@ enum:
 > **Representation is not support.** That the model can *represent* an optical
 > system does **not** mean file import or scientific interpretation for that
 > system is implemented or validated. Generic CSV/TSV import records whatever
-> optical system the manifest declares; no vendor/instrument reader exists, and
-> no optical system is scientifically interpreted.
+> optical system the manifest declares; the only
+> instrument reader is the narrow Beckman `.ip1` interference reader, and no
+> optical system is scientifically interpreted.
 
 ## Where it is recorded
 

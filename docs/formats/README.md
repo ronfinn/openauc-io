@@ -9,6 +9,10 @@ Open specifications authored by this project:
   (authoring) schema.
 - **[Generic delimited](generic-delimited.md)** — long and wide CSV/TSV.
 
-The generic CSV/TSV import conventions are documented here as they are
-implemented. This project does **not** reverse-engineer third-party instrument
-formats; only its own formats are specified here.
+Third-party format:
+
+- **[Beckman XL-I `.ip1`](ip1.md)** — one narrow, documented interference scan
+  layout. Not general Beckman support.
+
+This project does **not** reverse-engineer third-party instrument formats; the
+`.ip1` reader follows the manufacturer's published manual.

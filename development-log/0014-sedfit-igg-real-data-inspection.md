@@ -66,3 +66,16 @@ Use, PN LXLAI-IM-10AB, Chapter 3.
    allowed only from a documented specification (see the roadmap "Never" and
    vendor-reader rules).
 3. Do not implement other vendor formats.
+
+## 7. Outcome: narrow `.ip1` reader (branch `feat/ip1-interference-reader`)
+
+Header meanings were taken from the Beckman manual (see
+`docs/formats/ip1.md`), and a native reader for that one layout was added.
+Real-data check on the re-downloaded archive (sha256 unchanged; local only,
+not committed): all 226 scans load as a shared 1,759-point axis; scan ids
+`00001`–`00226`; every radius and signal array equals the source text exactly
+(all 226 compared); structural validation passes; plotting draws 226 lines;
+AUCX 1.1 export, `validate_aucx` and reload preserve observations and mapped
+metadata. Unresolved: token 7 reads 675 against the manual's 665 nm (kept raw,
+not mapped); signal unit undocumented; observation-column semantics are
+inferred from the narrow contract, not stated as explicitly as the header.

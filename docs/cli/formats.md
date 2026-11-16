@@ -39,6 +39,13 @@ generic-wide  Generic wide-format delimited
   layouts:     wide
   limitations: scans must share one radius axis; requires a manifest column mapping
   docs:        docs/formats/generic-delimited.md
+ip1  Beckman XL-I interference scan files (narrow)
+  suffixes:    .ip1
+  layouts:     one .ip1 file per scan, in a directory or singly; no manifest
+  limitations: only the documented .ip1 layout; no absorbance, .ra*, .wa* or other XL-A/XL-I files
+               signal unit unknown; wavelength token preserved raw, not mapped
+               no sample or timestamp is inferred; no manufacturer endorsement
+  docs:        docs/formats/ip1.md
 ```
 
 ## JSON output
@@ -51,6 +58,7 @@ uv run openauc formats --json | jq -r '.formats[] | "\(.format_id): \(.name)"'
 aucx: AUCX archive
 generic-long: Generic long-format delimited
 generic-wide: Generic wide-format delimited
+ip1: Beckman XL-I interference scan files (narrow)
 ```
 
 Each entry carries `format_id`, `name`, `suffixes`, `layouts`, `limitations`
@@ -67,4 +75,5 @@ and `doc_reference`.
 The `format_id` values are stable and are what you pass to
 `openauc.load(path, format=...)` or a manifest's `"format"` field.
 
-**No vendor or instrument formats are listed, because none are implemented.**
+The only instrument format listed is the narrow Beckman XL-I `ip1` reader; see
+[Beckman `.ip1`](../formats/ip1.md). It is not general Beckman support.

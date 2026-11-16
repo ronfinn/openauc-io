@@ -11,8 +11,13 @@ non-goals](../concepts/scientific-boundaries.md).
 
 ## Formats
 
-- **Generic CSV/TSV and AUCX only.** No vendor or instrument formats — Beckman
-  XL-A/XL-I, Optima, OpenAUC and SEDFIT/SEDPHAT files are not read.
+- **Generic CSV/TSV, AUCX and one narrow Beckman `.ip1` layout.** Only the
+  documented XL-I interference scan layout is read; absorbance, `.ra*`, `.wa*`,
+  other XL-A/XL-I output, Optima, OpenAUC and SEDFIT/SEDPHAT files are not. See
+  [Beckman `.ip1`](../formats/ip1.md). No manufacturer endorsement is implied.
+- **`.ip1` signal unit is unknown**, the wavelength token is not mapped (the
+  public data record 675, the manual says 665 nm) and the observation column
+  semantics are less explicitly documented than the header.
 - Generic delimited output **cannot express `UNKNOWN` as distinct from
   `MISSING`**. AUCX preserves all four statuses exactly.
 - No AUCX → CSV direction; it would need a documented lossiness policy.

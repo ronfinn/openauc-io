@@ -149,6 +149,7 @@ nav:
       - Generic delimited: formats/generic-delimited.md
       - Manifest version 1: formats/manifest-v1.md
       - Parser detection: formats/parser-detection.md
+      - Beckman .ip1 interference files: formats/ip1.md
       - AUCX version 1: formats/aucx.md
 
   - CLI reference:

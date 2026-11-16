@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Narrow native reader for Beckman XL-I interference scan files (`.ip1`),
+  from the manufacturer's manual (PN LXLAI-IM-10AB): `openauc.load` on an `.ip1`
+  file or directory, or `format="ip1"`. Maps cell, temperature, rotor speed and
+  total seconds; preserves the other header tokens, `cm/pixel` and the comment
+  raw; signal unit is unknown; nothing is inferred or transformed. Not general
+  Beckman support. See `docs/formats/ip1.md`.
 - Optional `ScanMetadata.sample_id`, linking a scan to a declared sample exactly
   as the source states it. Links are never inferred, including when only one
   sample is declared.

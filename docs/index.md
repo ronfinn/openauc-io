@@ -34,8 +34,9 @@ roadmap item:
 - no data-quality scoring — scientific suitability is always reported as
   `NOT_ASSESSED`;
 - no unit conversion — declared units are retained, never converted;
-- no vendor or instrument formats (Beckman XL-A/XL-I, Optima, OpenAUC,
-  SEDFIT/SEDPHAT are **not** read).
+- no general vendor or instrument support: only one narrow Beckman XL-I
+  interference layout (`.ip1`) is read; absorbance and other XL-A/XL-I files,
+  Optima, OpenAUC and SEDFIT/SEDPHAT files are **not**.
 
 See [Scientific boundaries](concepts/scientific-boundaries.md) for why.
 

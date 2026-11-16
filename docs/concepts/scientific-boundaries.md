@@ -43,8 +43,9 @@ unit from a value.
 
 ### No fabricated format rules
 
-Only *generic* CSV/TSV and this project's own AUCX are parsed. No vendor or
-instrument format is reverse-engineered. If a format is not documented publicly,
+Only *generic* CSV/TSV, this project's own AUCX and one narrow Beckman XL-I
+interference layout (`.ip1`, read from the manufacturer's published manual) are
+parsed. No vendor or instrument format is reverse-engineered. If a format is not documented publicly,
 openauc does not guess at it.
 
 ### No unverified claims
