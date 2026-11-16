@@ -31,6 +31,7 @@ from openauc.formats.base import (
     ResolvedSource,
     Table,
 )
+from openauc.formats.ip1 import IP1_FORMAT_ID, IP1_SUFFIX
 from openauc.formats.loader import load
 from openauc.formats.manifest import GenericManifest, load_manifest
 from openauc.formats.registry import (
@@ -59,10 +60,27 @@ register_archive_format(
     )
 )
 
+register_archive_format(
+    FormatInfo(
+        format_id=IP1_FORMAT_ID,
+        name="Beckman XL-I interference scan files (narrow)",
+        suffixes=(IP1_SUFFIX,),
+        layouts=("one .ip1 file per scan, in a directory or singly; no manifest",),
+        limitations=(
+            "only the documented .ip1 layout; no absorbance, .ra*, .wa* or other "
+            "XL-A/XL-I files",
+            "signal unit unknown; wavelength token preserved raw, not mapped",
+            "no sample or timestamp is inferred; no manufacturer endorsement",
+        ),
+        doc_reference="docs/formats/ip1.md",
+    )
+)
+
 __all__ = [
     "AUCX_FORMAT_ID",
     "AUCX_FORMAT_VERSION",
     "AUCX_SUFFIX",
+    "IP1_FORMAT_ID",
     "AUCXExport",
     "AUCXInfo",
     "ArchiveValidationReport",

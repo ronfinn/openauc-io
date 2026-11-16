@@ -5,7 +5,8 @@ Implemented: the canonical in-memory data model, generic CSV/TSV ingestion via
 structured experiment summaries, basic scan plotting (``openauc.plotting``), and
 the AUCX archival container.
 
-Not implemented: vendor/instrument format readers, unit conversion, and any form
+Not implemented: general vendor/instrument format readers (only a narrow Beckman
+XL-I ``.ip1`` interference reader exists), unit conversion, and any form
 of scientific analysis or quality control. See ``development-log/`` and
 ``docs/decisions/``.
 """

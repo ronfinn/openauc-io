@@ -21,6 +21,7 @@ from openauc.exceptions import (
 )
 from openauc.formats.aucx import AUCX_FORMAT_ID, AUCX_SUFFIX, read_aucx
 from openauc.formats.base import Parser, ParseResult, ResolvedSource, Table
+from openauc.formats.ip1 import IP1_FORMAT_ID, IP1_SUFFIX, read_ip1
 from openauc.formats.manifest import GenericManifest, load_manifest
 from openauc.formats.registry import detect_parser, get_parser
 from openauc.models import AUCExperiment, ImportProvenance, SourceChecksum
@@ -64,6 +65,11 @@ def load(
     if _is_archive_request(target, format):
         return read_aucx(target)
 
+    if _is_ip1_request(target, format, explicit_manifest):
+        if explicit_manifest is not None:
+            raise ManifestError("the ip1 reader does not use a manifest")
+        return read_ip1(target)
+
     base_dir, manifest_file, explicit_data = _resolve_layout(target, explicit_manifest)
     manifest_model = load_manifest(manifest_file)
     data_file = _resolve_data_file(base_dir, manifest_model, explicit_data)
@@ -84,6 +90,28 @@ def _is_archive_request(target: Path, format: str | None) -> bool:
     if format == AUCX_FORMAT_ID:
         return True
     return format is None and target.is_file() and target.suffix.lower() == AUCX_SUFFIX
+
+
+def _is_ip1_request(target: Path, format: str | None, manifest: Path | None) -> bool:
+    """True for ``format="ip1"``, or for manifest-less ``.ip1`` input.
+
+    Detection is conservative: a single ``.ip1`` file or a directory holding
+    ``.ip1`` files is claimed only when no manifest is supplied or adjacent.
+    """
+    if format == IP1_FORMAT_ID:
+        return True
+    if format is not None or manifest is not None:
+        return False
+    if target.is_file():
+        return (
+            target.suffix.lower() == IP1_SUFFIX
+            and _find_manifest(target.parent, None) is None
+        )
+    return (
+        target.is_dir()
+        and _find_manifest(target, None) is None
+        and any(p.suffix.lower() == IP1_SUFFIX for p in target.iterdir())
+    )
 
 
 # --------------------------------------------------------------------------- #
